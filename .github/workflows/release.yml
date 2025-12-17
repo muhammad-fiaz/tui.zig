@@ -1,0 +1,138 @@
+# Release Workflow - Build and publish release artifacts
+name: Release
+
+permissions:
+  contents: write
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.15.0
+
+      - name: Run Tests
+        run: zig build test
+
+  build-library:
+    name: Build Library (${{ matrix.target }})
+    needs: test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target:
+          - x86_64-windows
+          - x86-windows
+          - x86_64-linux
+          - x86-linux
+          - aarch64-linux
+          - x86_64-macos
+          - aarch64-macos
+          - x86_64-freestanding
+          - aarch64-freestanding
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.15.0
+
+      - name: Build Library
+        run: zig build -Doptimize=ReleaseSafe -Dtarget=${{ matrix.target }}
+
+      - name: Rename Artifact (Windows)
+        if: contains(matrix.target, 'windows')
+        run: mv zig-out/lib/tui.lib tui-${{ matrix.target }}.lib
+
+      - name: Rename Artifact (Unix)
+        if: contains(matrix.target, 'windows') == false
+        run: mv zig-out/lib/libtui.a libtui-${{ matrix.target }}.a
+
+      - name: Upload Artifact
+        run: gh release upload ${{ github.event.release.tag_name }} ${{ contains(matrix.target, 'windows') && format('tui-{0}.lib', matrix.target) || format('libtui-{0}.a', matrix.target) }}
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+  update-release:
+    name: Update Release Description
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get Release URL
+        id: get_url
+        run: echo "url=https://github.com/${{ github.repository }}/archive/refs/tags/${{ github.event.release.tag_name }}.tar.gz" >> $GITHUB_OUTPUT
+
+      - name: Setup Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.15.0
+
+      - name: Calculate Hash
+        id: calc_hash
+        run: |
+          zig fetch ${{ steps.get_url.outputs.url }}
+          HASH=$(zig fetch --save ${{ steps.get_url.outputs.url }} 2>&1 | grep -oP '(?<=hash: ).*' || echo "run-zig-fetch-to-get-hash")
+          echo "hash=$HASH" >> $GITHUB_OUTPUT
+
+      - name: Update Release Body
+        uses: softprops/action-gh-release@v1
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          body: |
+            ${{ github.event.release.body }}
+
+            ## 📦 Installation
+
+            ### Option A — Automatic (Recommended)
+
+            ```bash
+            zig fetch --save git+https://github.com/${{ github.repository }}.git#${{ github.event.release.tag_name }}
+            ```
+
+            ### Option B — Using Archive URL
+
+            ```bash
+            zig fetch --save https://github.com/${{ github.repository }}/archive/refs/tags/${{ github.event.release.tag_name }}.tar.gz
+            ```
+
+            Then add to `build.zig`:
+
+            ```zig
+            const tui_dep = b.dependency("tui", .{
+                .target = target,
+                .optimize = optimize,
+            });
+            exe.root_module.addImport("tui", tui_dep.module("tui"));
+            ```
+
+            ## 📥 Prebuilt Libraries
+
+            | Platform | Architecture | Download |
+            |----------|--------------|----------|
+            | Windows | x86_64 | [tui-x86_64-windows.lib](https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name }}/tui-x86_64-windows.lib) |
+            | Windows | x86 | [tui-x86-windows.lib](https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name }}/tui-x86-windows.lib) |
+            | Linux | x86_64 | [libtui-x86_64-linux.a](https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name }}/libtui-x86_64-linux.a) |
+            | Linux | x86 | [libtui-x86-linux.a](https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name }}/libtui-x86-linux.a) |
+            | Linux | aarch64 | [libtui-aarch64-linux.a](https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name }}/libtui-aarch64-linux.a) |
+            | macOS | x86_64 | [libtui-x86_64-macos.a](https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name }}/libtui-x86_64-macos.a) |
+            | macOS | aarch64 | [libtui-aarch64-macos.a](https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name }}/libtui-aarch64-macos.a) |
+            | Bare Metal | x86_64 | [libtui-x86_64-freestanding.a](https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name }}/libtui-x86_64-freestanding.a) |
+            | Bare Metal | aarch64 | [libtui-aarch64-freestanding.a](https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name }}/libtui-aarch64-freestanding.a) |

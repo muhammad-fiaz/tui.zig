@@ -1,0 +1,42 @@
+# Zig
+zig-cache/
+zig-out/
+.zig-cache/
+
+
+# Build artifacts
+*.o
+*.a
+*.so
+*.dll
+*.dylib
+*.exe
+*.pdb
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docs
+docs/node_modules/
+docs/.vitepress/cache/
+docs/.vitepress/dist/
+docs/bun.lock
+docs/package-lock.json
+docs/yarn.lock
+
+# Test coverage
+*.profdata
+*.profraw
+
+# Temporary files
+*.tmp
+*.temp
+*.log

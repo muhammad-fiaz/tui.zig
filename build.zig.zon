@@ -1,0 +1,15 @@
+.{
+    .name = .tui,
+    .version = "0.0.1",
+    .fingerprint = 0xca9f4dd1a731cc4c,
+    .minimum_zig_version = "0.15.0",
+    .dependencies = .{},
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        "examples",
+        "README.md",
+        "LICENSE",
+    },
+}
