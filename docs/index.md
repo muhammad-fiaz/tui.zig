@@ -112,7 +112,7 @@ const MyWidget = struct {
 
 ### Advanced Animation System
 - 30+ easing functions (Linear, Quad, Cubic, Sine, Expo, Circ, Back, Elastic, Bounce)
-- Generic Animation<T> for any type
+- Generic Animation&lt;T&gt; for any type
 - Loop and alternate modes
 - Animation groups and timers
 

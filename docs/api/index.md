@@ -16,7 +16,6 @@ Complete API documentation for TUI.zig.
 ### Styling
 - [`Style`](/api/style) - Text styling
 - [`Color`](/api/color) - Color system
-- [`Theme`](/api/theme) - Theme management
 
 ### Events
 - [`Event`](/api/event) - Event types
