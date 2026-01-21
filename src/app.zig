@@ -99,7 +99,7 @@ pub const App = struct {
     tick_count: u64 = 0,
 
     /// FPS tracking
-    fps_counter: animation.FpsCounter = .{},
+    fps_counter: animation.FpsCounter = animation.FpsCounter.init(),
 
     /// Quit requested
     should_quit: bool = false,
