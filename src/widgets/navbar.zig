@@ -64,7 +64,7 @@ pub const Navbar = struct {
             sub.putString(item.label);
             sub.putString(" ");
 
-            x += @as(u16, @intCast(item.label.len)) + (if (item.icon != null) 4 else 2);
+            x += @as(u16, @intCast(item.label.len)) + (if (item.icon != null) @as(u16, 4) else @as(u16, 2));
         }
     }
 
