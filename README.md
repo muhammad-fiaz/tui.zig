@@ -30,75 +30,113 @@
 ---
 TUI.zig is a Modern and easy-to-use Terminal User Interface (TUI) library for the Zig programming language. It provides a rich set of features to create modern, responsive, and visually appealing terminal applications with minimal effort.
 
-> **Note:** TUI.zig is under active development. so expect frequent updates and improvements.
+> [!NOTE]
+> This project is actively maintained and contributions are welcome. See our [Contributing Guide](https://muhammad-fiaz.github.io/tui.zig/contributing) for details.
 
-## Features
+---
 
-TUI.zig provides a comprehensive Terminal User Interface library with cross-platform support:
+<details>
+<summary><strong>Features</strong> (click to expand)</summary>
 
-### Rendering & Display
+| Feature | Description | Documentation |
+|---------|-------------|---------------|
+| **True Color (24-bit RGB)** | Full spectrum color support for modern terminals. | https://muhammad-fiaz.github.io/tui.zig/guide/styling |
+| **256 Color Palette** | Fallback color support for older terminals. | https://muhammad-fiaz.github.io/tui.zig/guide/styling |
+| **16 ANSI Colors** | Universal compatibility with basic terminal colors. | https://muhammad-fiaz.github.io/tui.zig/guide/styling |
+| **Double Buffering** | Flicker-free rendering by buffering entire screen. | https://muhammad-fiaz.github.io/tui.zig/api/renderer |
+| **Diff-Based Updates** | Only redraw changed cells for optimal performance. | https://muhammad-fiaz.github.io/tui.zig/api/renderer |
+| **Unicode Support** | Full grapheme cluster handling for international text. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets |
+| **Wide Character Support** | CJK and emoji rendering with proper width calculation. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets |
+| **Keyboard Events** | Full key detection with modifiers (Ctrl, Alt, Shift). | https://muhammad-fiaz.github.io/tui.zig/guide/events |
+| **Mouse Support** | Click, drag, scroll, and hover event handling. | https://muhammad-fiaz.github.io/tui.zig/guide/events |
+| **Bracketed Paste** | Safe paste mode to distinguish typed vs pasted input. | https://muhammad-fiaz.github.io/tui.zig/guide/events |
+| **Focus Events** | Window focus detection for responsive applications. | https://muhammad-fiaz.github.io/tui.zig/guide/events |
+| **Raw Mode** | Direct terminal control for real-time input. | https://muhammad-fiaz.github.io/tui.zig/api/terminal |
+| **Text Widget** | Styled text with alignment and wrapping. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#text |
+| **Button Widget** | Clickable buttons with hover states and callbacks. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#button |
+| **Input Field** | Single-line text input with cursor navigation. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#input-field |
+| **Text Area** | Multi-line text editing with scrolling. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#text-area |
+| **Checkbox** | Toggle checkboxes with state management. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#checkbox |
+| **Radio Button** | Single selection groups for mutually exclusive options. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#radio-button |
+| **Progress Bar** | Visual progress indicators with customizable styles. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#progress-bar |
+| **Spinner** | Animated loading indicators with multiple presets. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#spinner |
+| **List View** | Scrollable item lists with selection support. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#list-view |
+| **Table** | Data tables with columns, rows, and sorting. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#table |
+| **Tabs** | Tabbed navigation for organizing content. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#tabs |
+| **Modal** | Dialog overlays for focused interactions. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#modal |
+| **Scroll View** | Scrollable containers for overflow content. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#scroll-view |
+| **Split View** | Resizable panes for multi-panel layouts. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#split-view |
+| **Badge** | Status indicators with variants and sizes. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#badge |
+| **Card** | Container widgets with titles and content. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#card |
+| **Tooltip** | Contextual information on hover. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#tooltip |
+| **Accordion** | Collapsible content sections. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#accordion |
+| **Breadcrumb** | Navigation path indicators. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#breadcrumb |
+| **Sidebar** | Navigation sidebars with items. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#sidebar |
+| **Status Bar** | Application status displays. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#status-bar |
+| **Toast** | Notification messages with auto-dismiss. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#toast |
+| **Skeleton** | Loading placeholders with animations. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#skeleton |
+| **Rich Text Styling** | Bold, italic, underline, strikethrough formatting. | https://muhammad-fiaz.github.io/tui.zig/guide/styling |
+| **Built-in Themes** | Default, Dark, Light, Nord, Dracula, Gruvbox themes. | https://muhammad-fiaz.github.io/tui.zig/guide/styling#themes |
+| **Custom Themes** | Create your own color schemes with theme builder. | https://muhammad-fiaz.github.io/tui.zig/guide/styling#custom-themes |
+| **Border Styles** | Single, double, rounded, thick, ASCII border styles. | https://muhammad-fiaz.github.io/tui.zig/guide/styling#borders |
+| **Flex Layout** | Flexible row/column layouts with constraints. | https://muhammad-fiaz.github.io/tui.zig/guide/layout |
+| **Box Model** | Padding, margin, and border support. | https://muhammad-fiaz.github.io/tui.zig/guide/layout#box-model |
+| **Constraints** | Min/max sizing for responsive layouts. | https://muhammad-fiaz.github.io/tui.zig/guide/layout#constraints |
+| **Alignment** | Start, center, end, stretch alignment options. | https://muhammad-fiaz.github.io/tui.zig/guide/layout#alignment |
+| **Easing Functions** | Linear, ease-in, ease-out, bounce, elastic curves. | https://muhammad-fiaz.github.io/tui.zig/guide/animation |
+| **Tween Animations** | Smooth value interpolation for transitions. | https://muhammad-fiaz.github.io/tui.zig/guide/animation#tween |
+| **Timer System** | Scheduled callbacks for timed operations. | https://muhammad-fiaz.github.io/tui.zig/guide/animation#timers |
+| **FPS Counter** | Performance monitoring for optimization. | https://muhammad-fiaz.github.io/tui.zig/api/renderer#fps |
 
-- **True Color (24-bit RGB)** - Full spectrum color support
-- **256 Color Palette** - Fallback for older terminals
-- **16 ANSI Colors** - Universal compatibility
-- **Double Buffering** - Flicker-free rendering
-- **Diff-Based Updates** - Only redraw changed cells
-- **Unicode Support** - Full grapheme cluster handling
-- **Wide Character Support** - CJK and emoji rendering
+</details>
 
-### Input Handling
+---
 
-- **Keyboard Events** - Full key detection with modifiers
-- **Mouse Support** - Click, drag, scroll, and hover
-- **Bracketed Paste** - Safe paste mode
-- **Focus Events** - Window focus detection
-- **Raw Mode** - Direct terminal control
+<details>
+<summary><strong>Prerequisites and Supported Platforms</strong> (click to expand)</summary>
 
-### Widget System
+<br>
 
-- **Text** - Styled text with alignment and wrapping
-- **Button** - Clickable buttons with hover states
-- **Input Field** - Single-line text input with cursor
-- **Text Area** - Multi-line text editing
-- **Checkbox** - Toggle checkboxes
-- **Radio Button** - Single selection groups
-- **Progress Bar** - Visual progress indicators
-- **Spinner** - Animated loading indicators
-- **List View** - Scrollable item lists
-- **Table** - Data tables with columns
-- **Tabs** - Tabbed navigation
-- **Modal** - Dialog overlays
-- **Scroll View** - Scrollable containers
-- **Split View** - Resizable panes
-- more...
+## Prerequisites
 
-### Styling & Themes
+Before using `TUI.zig`, ensure you have the following:
 
-- **Rich Text Styling** - Bold, italic, underline, strikethrough
-- **Built-in Themes** - Default, Dark, Light, Nord, Dracula, Gruvbox
-- **Custom Themes** - Create your own color schemes
-- **Border Styles** - Single, double, rounded, thick, ASCII
+| Requirement | Version | Notes |
+|-------------|---------|-------|
+| **Zig** | 0.16.0+ | Download from [ziglang.org](https://ziglang.org/download/) |
+| **Operating System** | Windows 10+, Linux, macOS | Cross-platform terminal support |
 
-### Layout System
+---
 
-- **Flex Layout** - Flexible row/column layouts
-- **Box Model** - Padding, margin, borders
-- **Constraints** - Min/max sizing
-- **Alignment** - Start, center, end, stretch
+## Supported Platforms
 
-### Animation
+`TUI.zig` is validated on these architectures:
 
-- **Easing Functions** - Linear, ease-in, ease-out, bounce, elastic
-- **Tween Animations** - Smooth value interpolation
-- **Timer System** - Scheduled callbacks
-- **FPS Counter** - Performance monitoring
+| Platform | x86_64 (64-bit) | aarch64 (ARM64) | x86 (32-bit) |
+|----------|-----------------|-----------------|--------------|
+| **Linux** | Yes | Yes | Yes |
+| **Windows** | Yes | Yes | Yes |
+| **macOS** | Yes | Yes (Apple Silicon) | No |
 
-### Cross-Platform
+### Cross-Compilation
 
-- **Linux** - Full terminal support
-- **macOS** - Native terminal integration
-- **Windows** - Console API support
-- **BSD/Unix** - POSIX compatibility
+Zig makes cross-compilation easy. Build for any target from any host:
+
+```bash
+# Build for Linux ARM64 from Windows
+zig build -Dtarget=aarch64-linux
+
+# Build for Windows from Linux  
+zig build -Dtarget=x86_64-windows
+
+# Build for macOS Apple Silicon from Linux
+zig build -Dtarget=aarch64-macos
+
+# Build for 32-bit Windows
+zig build -Dtarget=x86-windows
+```
+
+</details>
 
 ---
 
