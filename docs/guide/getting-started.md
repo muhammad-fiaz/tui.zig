@@ -6,10 +6,8 @@ Get up and running with TUI.zig in minutes.
 
 ### Stable Release (Recommended)
 
-Install the latest stable release using a specific version tag:
-
 ```bash
-zig fetch --save "git+https://github.com/muhammad-fiaz/tui.zig.git#0.0.2"
+zig fetch --save "https://github.com/muhammad-fiaz/tui.zig/archive/refs/tags/0.0.2.tar.gz"
 ```
 
 ### Development (Latest)

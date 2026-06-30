@@ -7,7 +7,7 @@
 
 ## Install via Zig Package Manager (Recommended)
 
-### Stable Release (v0.0.2)
+### Stable Release ([v0.0.2](https://github.com/muhammad-fiaz/tui.zig/releases/tag/0.0.2))
 
 Add TUI.zig as a dependency in your `build.zig.zon`:
 
