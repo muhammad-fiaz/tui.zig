@@ -1,0 +1,67 @@
+name: Documentation Issue
+description: Report an issue with documentation
+title: "[Docs]: "
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Found an issue with the documentation? Let us know so we can improve it.
+
+  - type: dropdown
+    id: doc_type
+    attributes:
+      label: Documentation Type
+      description: What type of documentation is affected?
+      options:
+        - Guide (Getting Started, Tutorial)
+        - API Reference
+        - Widget Documentation
+        - Examples
+        - README
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: page
+    attributes:
+      label: Page URL or File
+      description: Which page or file has the issue?
+      placeholder: "e.g., /guide/getting-started or src/widgets/button.zig"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: issue_type
+    attributes:
+      label: Issue Type
+      description: What kind of documentation issue is this?
+      options:
+        - Incorrect information
+        - Missing information
+        - Outdated content
+        - Broken link
+        - Typo or grammar
+        - Code example doesn't work
+        - Confusing explanation
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe the documentation issue.
+      placeholder: Describe what's wrong or missing...
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested Fix
+      description: If you know how to fix it, describe the correction.
+      placeholder: What should the documentation say instead?
+    validations:
+      required: false
