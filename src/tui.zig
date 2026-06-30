@@ -302,6 +302,45 @@ pub const AlertDialog = alert.AlertDialog;
 /// Create a badge
 pub const Badge = badge.Badge;
 
+/// Badge variant type
+pub const BadgeVariant = badge.BadgeVariant;
+
+/// Badge size type
+pub const BadgeSize = badge.BadgeSize;
+
+/// Accordion item type
+pub const AccordionItem = accordion.AccordionItem;
+
+/// Accordion mode type
+pub const AccordionMode = accordion.AccordionMode;
+
+/// Breadcrumb item type
+pub const BreadcrumbItem = breadcrumb.BreadcrumbItem;
+
+/// Nav item type
+pub const NavItem = navbar.NavItem;
+
+/// Menu item type
+pub const MenuItem = menu.MenuItem;
+
+/// Radio option type
+pub const RadioOption = radio.RadioOption;
+
+/// Sidebar item type
+pub const SidebarItem = sidebar.SidebarItem;
+
+/// Status item type
+pub const StatusItem = statusbar.StatusItem;
+
+/// Tree node type
+pub const TreeNode = tree.TreeNode;
+
+/// Tooltip position type
+pub const TooltipPosition = tooltip.TooltipPosition;
+
+/// Skeleton variant type
+pub const SkeletonVariant = skeleton.SkeletonVariant;
+
 /// Create a card
 pub const Card = card.Card;
 
@@ -391,18 +430,6 @@ pub const RenderContext = widget.RenderContext;
 
 /// Result of event handling
 pub const EventResult = widget.EventResult;
-
-// ============================================
-// Version Information
-// ============================================
-
-pub const version = std.SemanticVersion{
-    .major = 0,
-    .minor = 1,
-    .patch = 0,
-};
-
-pub const version_string = "0.1.0";
 
 // ============================================
 // Tests

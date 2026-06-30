@@ -138,9 +138,8 @@ pub fn Table(comptime T: type) type {
             return @min(self.rows.len, available);
         }
 
-        /// Calculate column widths
-        fn calculateColumnWidths(self: *Self, total_width: u16) []u16 {
-            var widths: [32]u16 = undefined;
+        /// Calculate column widths into the provided buffer. Returns the number of columns.
+        fn calculateColumnWidths(self: *Self, total_width: u16, widths: *[32]u16) usize {
             const col_count = @min(self.columns.len, 32);
 
             var fixed_total: u32 = 0;
@@ -177,7 +176,7 @@ pub fn Table(comptime T: type) type {
                 }
             }
 
-            return widths[0..col_count];
+            return col_count;
         }
 
         /// Render the table
@@ -185,7 +184,9 @@ pub fn Table(comptime T: type) type {
             var sub = ctx.getSubScreen();
             var y: u16 = 0;
 
-            const widths = self.calculateColumnWidths(sub.width);
+            var widths_buf: [32]u16 = undefined;
+            const col_count = self.calculateColumnWidths(sub.width, &widths_buf);
+            const widths = widths_buf[0..col_count];
             var cell_buf: [256]u8 = undefined;
 
             // Draw header

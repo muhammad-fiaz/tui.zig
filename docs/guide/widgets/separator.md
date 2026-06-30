@@ -30,7 +30,7 @@ None - this widget is not interactive.
 
 ```zig
 const tui = @import("tui");
-const Separator = tui.widgets.Separator;
+const Separator = tui.Separator;
 
 var separator = Separator.init();
 ```

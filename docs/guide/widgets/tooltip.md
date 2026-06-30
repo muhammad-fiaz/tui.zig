@@ -32,7 +32,7 @@ None - this widget is not interactive.
 
 ```zig
 const tui = @import("tui");
-const Tooltip = tui.widgets.Tooltip;
+const Tooltip = tui.Tooltip;
 
 var tooltip = Tooltip.init("Click here to save")
     .withPosition(.top)

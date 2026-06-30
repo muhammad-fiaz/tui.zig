@@ -27,7 +27,7 @@ TUI.zig is designed with these principles:
 
 ### 🧩 Widgets
 
-TUI.zig includes 14+ built-in widgets:
+TUI.zig includes 36+ built-in widgets:
 
 | Widget       | Description                 |
 | ------------ | --------------------------- |
@@ -45,6 +45,27 @@ TUI.zig includes 14+ built-in widgets:
 | Modal        | Dialog overlays             |
 | Scroll View  | Scrollable containers       |
 | Split View   | Resizable panes             |
+| Badge        | Status indicators           |
+| Card         | Content containers          |
+| Accordion    | Collapsible sections        |
+| Breadcrumb   | Navigation paths            |
+| Grid         | Grid layouts                |
+| Image        | Image display               |
+| Menu         | Dropdown menus              |
+| Navbar       | Top navigation bars         |
+| Pagination   | Page navigation             |
+| Sidebar      | Side navigation panels      |
+| Skeleton     | Loading placeholders        |
+| Slider       | Range input                 |
+| Statusbar    | Status information          |
+| Switch       | Toggle switches             |
+| Toast        | Notifications               |
+| Tooltip      | Hover information           |
+| Tree         | Tree views                  |
+| Alert        | Alert dialogs               |
+| Border       | Border containers           |
+| Separator    | Visual dividers             |
+| more...      |                             |
 
 ### 🖱️ Input
 
@@ -63,7 +84,7 @@ TUI.zig includes 14+ built-in widgets:
 ### 🎭 Styling
 
 - Text attributes (bold, italic, underline, etc.)
-- Built-in themes (Dark, Light, Nord, Dracula, Gruvbox)
+- Built-in themes (Default, Dark, Light, Nord, Dracula, Gruvbox, High Contrast)
 - Custom theme support
 - Various border styles
 

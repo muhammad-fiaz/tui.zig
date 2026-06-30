@@ -60,7 +60,7 @@ pub const InputField = struct {
     pub fn init(allocator: std.mem.Allocator) InputField {
         return .{
             .allocator = allocator,
-            .value = .{},
+            .value = .empty,
         };
     }
 

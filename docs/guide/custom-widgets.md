@@ -62,11 +62,11 @@ pub const CompositeWidget = struct {
     }
 
     pub fn render(self: *CompositeWidget, ctx: *tui.RenderContext) void {
-        // Delegate rendering
-        var sub1 = ctx.screen.subRegion(0, 0, 10, 1);
+        // Delegate rendering to child contexts with specific bounds
+        var sub1 = ctx.child(tui.Rect.init(0, 0, 10, 1));
         self.button.render(&sub1);
 
-        var sub2 = ctx.screen.subRegion(0, 2, 20, 1);
+        var sub2 = ctx.child(tui.Rect.init(0, 2, 20, 1));
         self.text.render(&sub2);
     }
 };

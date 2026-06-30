@@ -4,9 +4,17 @@ Get up and running with TUI.zig in minutes.
 
 ## Installation
 
-### Using Zig Package Manager
+### Stable Release (Recommended)
 
-Add TUI.zig to your project:
+Install the latest stable release using a specific version tag:
+
+```bash
+zig fetch --save "git+https://github.com/muhammad-fiaz/tui.zig.git#0.0.2"
+```
+
+### Development (Latest)
+
+Install the latest development version from the main branch:
 
 ```bash
 zig fetch --save git+https://github.com/muhammad-fiaz/tui.zig.git
@@ -144,7 +152,7 @@ const FormDemo = struct {
         return .{
             .input = tui.InputField.init(allocator)
                 .withPlaceholder("Enter text..."),
-            .checkbox = tui.Checkbox.init("Accept terms"),
+            .checkbox = tui.Checkbox.init("Accept terms", null),
             .slider = tui.Slider.init(0.0, 100.0),
         };
     }

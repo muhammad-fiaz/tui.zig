@@ -75,7 +75,7 @@ The `Alert` widget displays important messages with different severity levels (i
 
 ```zig
 const tui = @import("tui");
-const Alert = tui.widgets.Alert;
+const Alert = tui.Alert;
 
 var successAlert = Alert.init("Operation Complete", "Your data has been saved successfully.")
     .withType(.success)
@@ -107,7 +107,7 @@ var warningAlert = Alert.init("System Maintenance", "The system will be unavaila
 ### Confirmation Dialog
 
 ```zig
-const AlertDialog = tui.widgets.AlertDialog;
+const AlertDialog = tui.AlertDialog;
 
 fn onConfirmDelete() void {
     std.debug.print("User confirmed deletion\n", .{});
@@ -214,7 +214,7 @@ styledDialog.style = Style.default.setFg(Color.magenta);
 
 ```zig
 const tui = @import("tui");
-const Alert = tui.widgets.Alert;
+const Alert = tui.Alert;
 
 var alert = Alert.init("Warning", "This is a warning message")
     .withType(.warning)
@@ -236,7 +236,7 @@ var errorAlert = Alert.init("Error", "Something went wrong")
 ### Alert Dialog
 
 ```zig
-const AlertDialog = tui.widgets.AlertDialog;
+const AlertDialog = tui.AlertDialog;
 
 fn onConfirm() void {
     std.debug.print("Confirmed!\n", .{});

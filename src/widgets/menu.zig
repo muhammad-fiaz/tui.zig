@@ -77,7 +77,7 @@ pub const Menu = struct {
 
                 sub.moveCursor(1, y);
                 if (!item.enabled) {
-                    sub.setStyle(sub.getStyle().dim());
+                    sub.setStyle(sub.current_style.dim());
                 }
 
                 sub.putString(item.label);

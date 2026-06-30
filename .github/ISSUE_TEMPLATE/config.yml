@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://muhammad-fiaz.github.io/tui.zig/
+    about: Check the documentation for guides and API reference
+  - name: GitHub Discussions
+    url: https://github.com/muhammad-fiaz/tui.zig/discussions
+    about: Ask questions and discuss ideas

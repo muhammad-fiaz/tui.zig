@@ -141,6 +141,14 @@ const MyWidget = struct {
 
 ## Installation
 
+### Stable Release (Recommended)
+
+```bash
+zig fetch --save "git+https://github.com/muhammad-fiaz/tui.zig.git#0.0.2"
+```
+
+### Development (Latest)
+
 ```bash
 zig fetch --save git+https://github.com/muhammad-fiaz/tui.zig.git
 ```

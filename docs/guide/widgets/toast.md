@@ -35,7 +35,7 @@ None - this widget is not interactive.
 
 ```zig
 const tui = @import("tui");
-const Toast = tui.widgets.Toast;
+const Toast = tui.Toast;
 
 var toast = Toast.init("Operation completed successfully")
     .withType(.success)
@@ -57,7 +57,7 @@ toast.show();
 ### Toast Manager
 
 ```zig
-const ToastManager = tui.widgets.ToastManager;
+const ToastManager = tui.ToastManager;
 
 var manager = ToastManager.init(allocator);
 defer manager.deinit();

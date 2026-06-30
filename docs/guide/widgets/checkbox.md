@@ -6,13 +6,13 @@ A toggleable checkbox.
 
 ```zig
 const tui = @import("tui");
-const Checkbox = tui.widgets.Checkbox;
+const Checkbox = tui.Checkbox;
 ```
 
 ## Usage
 
 ```zig
-var check = Checkbox.init("Enable Logging");
+var check = Checkbox.init("Enable Logging", null);
 ```
 
 ## Initial State

@@ -6,7 +6,7 @@ Multi-line text editing widget.
 
 ```zig
 const tui = @import("tui");
-const TextArea = tui.widgets.TextArea;
+const TextArea = tui.TextArea;
 ```
 
 ## Usage

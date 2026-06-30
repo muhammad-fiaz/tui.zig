@@ -6,7 +6,7 @@ A pop-up dialog that overlays other content.
 
 ```zig
 const tui = @import("tui");
-const Modal = tui.widgets.Modal;
+const Modal = tui.Modal;
 ```
 
 ## Usage

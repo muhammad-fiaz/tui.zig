@@ -188,7 +188,7 @@ pub const Button = struct {
     }
 
     /// Layout
-    pub fn layout_button(self: *Button, bounds: Rect) void {
+    pub fn layout(self: *Button, bounds: Rect) void {
         self.base.bounds = bounds;
     }
 };

@@ -29,11 +29,14 @@ A `Theme` is a collection of styles for common UI elements.
 
 ```zig
 pub const Theme = struct {
-    primary: Style,
-    secondary: Style,
-    background: Style,
-    surface: Style,
-    error: Style,
+    primary: Color,
+    secondary: Color,
+    accent: Color,
+    background: Color,
+    surface: Color,
+    foreground: Color,
+    muted: Color,
+    error_color: Color,
     // ...
 };
 ```

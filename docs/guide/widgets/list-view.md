@@ -6,7 +6,7 @@ A vertical list of items with selection support.
 
 ```zig
 const tui = @import("tui");
-const ListView = tui.widgets.ListView;
+const ListView = tui.ListView;
 ```
 
 ## Usage

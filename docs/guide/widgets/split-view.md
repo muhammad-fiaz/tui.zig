@@ -42,8 +42,8 @@ The `SplitView` widget provides a resizable split-pane interface for displaying 
 
 ```zig
 const tui = @import("tui");
-const SplitView = tui.widgets.SplitView;
-const Text = tui.widgets.Text;
+const SplitView = tui.SplitView;
+const Text = tui.Text;
 
 var left_text = Text.init("Left pane content");
 var right_text = Text.init("Right pane content");

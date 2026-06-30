@@ -1,0 +1,46 @@
+name: Help Wanted
+description: Ask for help with using TUI.zig
+title: "[Help]: "
+labels: ["question", "help wanted"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Need help with TUI.zig? Describe what you're trying to achieve and we'll do our best to assist.
+
+  - type: textarea
+    id: question
+    attributes:
+      label: What are you trying to do?
+      description: Describe your goal or what you're building.
+      placeholder: "I'm trying to build a..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: code
+    attributes:
+      label: What have you tried?
+      description: Show the code you've written so far.
+      render: zig
+      placeholder: Your code so far...
+    validations:
+      required: false
+
+  - type: textarea
+    id: error
+    attributes:
+      label: Error or unexpected behavior
+      description: If applicable, include any error messages or unexpected output.
+      placeholder: Error messages or unexpected behavior...
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other relevant information (Zig version, platform, etc.).
+      placeholder: Zig version, platform, screenshots...
+    validations:
+      required: false

@@ -1,0 +1,94 @@
+name: Bug Report
+description: Report a bug or unexpected behavior in TUI.zig
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out the information below to help us investigate and fix the issue.
+
+  - type: input
+    id: version
+    attributes:
+      label: TUI.zig Version
+      description: What version of TUI.zig are you using?
+      placeholder: "e.g., 0.0.2"
+    validations:
+      required: true
+
+  - type: input
+    id: zig_version
+    attributes:
+      label: Zig Version
+      description: What version of Zig are you using?
+      placeholder: "e.g., 0.16.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      description: What platform are you running on?
+      options:
+        - Linux
+        - macOS
+        - Windows
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: Describe the bug...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior.
+      placeholder: |
+        1. Create a widget with...
+        2. Call method...
+        3. See error...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: Describe the expected behavior...
+    validations:
+      required: false
+
+  - type: textarea
+    id: code
+    attributes:
+      label: Minimal Reproducible Code
+      description: If possible, provide a minimal code example that reproduces the issue.
+      render: zig
+      placeholder: |
+        const tui = @import("tui");
+
+        pub fn main() !void {
+            // Your code here
+        }
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem here (screenshots, error output, etc.).
+      placeholder: Any additional information...
+    validations:
+      required: false

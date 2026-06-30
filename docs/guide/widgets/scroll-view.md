@@ -46,8 +46,8 @@ The `ScrollView` widget provides a scrollable container for content that exceeds
 
 ```zig
 const tui = @import("tui");
-const ScrollView = tui.widgets.ScrollView;
-const Text = tui.widgets.Text;
+const ScrollView = tui.ScrollView;
+const Text = tui.Text;
 
 var text = Text.init("This is a long text that will be scrollable...");
 var scroll_view = ScrollView(Text).init(text)

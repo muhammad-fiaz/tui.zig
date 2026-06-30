@@ -34,9 +34,8 @@ Main diff-based renderer for optimal performance.
 - `current_style: Style` - Current terminal style state
 - `last_x: u16` - Last cursor X position
 - `last_y: u16` - Last cursor Y position
-- `stdout: std.fs.File` - Standard output handle
-- `cells_drawn: usize` - Statistics: cells drawn this frame
-- `cells_skipped: usize` - Statistics: cells skipped this frame
+- `stdout: std.Io.File` - Standard output handle
+- `io: std.Io` - I/O context for writes
 
 ### Methods
 
@@ -100,7 +99,8 @@ Simple immediate-mode renderer without diffing.
 
 ### Fields
 
-- `stdout: std.fs.File` - Standard output handle
+- `stdout: std.Io.File` - Standard output handle
+- `io: std.Io` - I/O context for writes
 - `current_style: Style` - Current style state
 
 ### Methods

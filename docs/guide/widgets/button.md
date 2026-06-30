@@ -6,7 +6,7 @@ The `Button` widget is a clickable element that triggers an action.
 
 ```zig
 const tui = @import("tui");
-const Button = tui.widgets.Button;
+const Button = tui.Button;
 ```
 
 ## Basic Usage

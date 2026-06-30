@@ -17,12 +17,12 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Zig
         uses: mlugg/setup-zig@v2
         with:
-          version: 0.15.0
+          version: 0.16.0
 
       - name: Run Tests
         run: zig build test
@@ -45,12 +45,12 @@ jobs:
           - aarch64-freestanding
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Zig
         uses: mlugg/setup-zig@v2
         with:
-          version: 0.15.0
+          version: 0.16.0
 
       - name: Build Library
         run: zig build -Doptimize=ReleaseSafe -Dtarget=${{ matrix.target }}
@@ -74,7 +74,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Get Release URL
         id: get_url
@@ -83,7 +83,7 @@ jobs:
       - name: Setup Zig
         uses: mlugg/setup-zig@v2
         with:
-          version: 0.15.0
+          version: 0.16.0
 
       - name: Calculate Hash
         id: calc_hash

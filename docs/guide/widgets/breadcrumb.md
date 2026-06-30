@@ -29,8 +29,8 @@ The `Breadcrumb` widget displays hierarchical navigation paths, showing the curr
 
 ```zig
 const tui = @import("tui");
-const Breadcrumb = tui.widgets.Breadcrumb;
-const BreadcrumbItem = tui.widgets.BreadcrumbItem;
+const Breadcrumb = tui.Breadcrumb;
+const BreadcrumbItem = tui.BreadcrumbItem;
 
 const items = [_]BreadcrumbItem{
     .{ .label = "Home" },

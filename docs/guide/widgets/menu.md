@@ -31,8 +31,8 @@ The `Menu` widget provides a dropdown or popup menu for navigation and actions. 
 
 ```zig
 const tui = @import("tui");
-const Menu = tui.widgets.Menu;
-const MenuItem = tui.widgets.MenuItem;
+const Menu = tui.Menu;
+const MenuItem = tui.MenuItem;
 
 const items = [_]MenuItem{
     .{ .label = "New", .shortcut = "Ctrl+N" },
