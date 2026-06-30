@@ -30,8 +30,8 @@ The `TreeView` widget displays hierarchical data in an expandable tree structure
 
 ```zig
 const tui = @import("tui");
-const TreeView = tui.widgets.TreeView;
-const TreeNode = tui.widgets.TreeNode;
+const TreeView = tui.TreeView;
+const TreeNode = tui.TreeNode;
 
 const nodes = [_]TreeNode{
     .{

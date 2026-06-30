@@ -5,6 +5,7 @@ const std = @import("std");
 const widget = @import("widget.zig");
 const Style = @import("../style/style.zig").Style;
 const Color = @import("../style/color.zig").Color;
+const unicode = @import("../unicode/unicode.zig");
 
 pub const SkeletonVariant = enum {
     text,
@@ -126,5 +127,37 @@ pub const Skeleton = struct {
             0;
         const end = self.animation_offset;
         return x >= start and x <= end;
+    }
+
+    pub fn sizeHint(self: *Skeleton) widget.SizeHint {
+        return .{
+            .min_width = self.width,
+            .preferred_width = self.width,
+            .min_height = self.height,
+            .preferred_height = self.height,
+        };
+    }
+
+    pub fn isFocusable(self: *Skeleton) bool {
+        _ = self;
+        return false;
+    }
+
+    test "skeleton creation" {
+        const skel = Skeleton.init(.rectangle);
+        try std.testing.expectEqual(SkeletonVariant.rectangle, skel.variant);
+    }
+
+    test "skeleton with size" {
+        const skel = Skeleton.init(.text).withSize(50, 3);
+        try std.testing.expectEqual(@as(u16, 50), skel.width);
+        try std.testing.expectEqual(@as(u16, 3), skel.height);
+    }
+
+    test "skeleton size hint" {
+        var skel = Skeleton.init(.circle).withSize(10, 10);
+        const hint = skel.sizeHint();
+        try std.testing.expectEqual(@as(u16, 10), hint.min_width);
+        try std.testing.expectEqual(@as(u16, 10), hint.min_height);
     }
 };

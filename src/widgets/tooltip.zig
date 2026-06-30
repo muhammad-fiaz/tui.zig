@@ -5,6 +5,7 @@ const std = @import("std");
 const widget = @import("widget.zig");
 const Style = @import("../style/style.zig").Style;
 const Color = @import("../style/color.zig").Color;
+const unicode = @import("../unicode/unicode.zig");
 
 pub const TooltipPosition = enum {
     top,
@@ -109,5 +110,40 @@ pub const Tooltip = struct {
         sub.setStyle(self.style.setBg(Color.fromRGB(50, 50, 60)).setFg(Color.white));
         sub.moveCursor(x + 2, y + 1);
         sub.putString(self.text);
+    }
+
+    pub fn sizeHint(self: *Tooltip) widget.SizeHint {
+        const text_width = unicode.stringWidth(self.text);
+        return .{
+            .min_width = @intCast(text_width + 4),
+            .preferred_width = @intCast(text_width + 4),
+            .min_height = 3,
+            .preferred_height = 3,
+        };
+    }
+
+    pub fn isFocusable(self: *Tooltip) bool {
+        _ = self;
+        return false;
+    }
+
+    test "tooltip creation" {
+        const tip = Tooltip.init("Help text");
+        try std.testing.expectEqualStrings("Help text", tip.text);
+        try std.testing.expect(!tip.visible);
+    }
+
+    test "tooltip show hide" {
+        var tip = Tooltip.init("Tip");
+        tip.show();
+        try std.testing.expect(tip.visible);
+        tip.hide();
+        try std.testing.expect(!tip.visible);
+    }
+
+    test "tooltip size hint" {
+        var tip = Tooltip.init("Hi");
+        const hint = tip.sizeHint();
+        try std.testing.expectEqual(@as(u16, 3), hint.min_height);
     }
 };

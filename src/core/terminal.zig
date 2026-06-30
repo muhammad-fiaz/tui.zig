@@ -123,25 +123,17 @@ pub const TerminalConfig = struct {
 pub const Terminal = struct {
     handle: platform.TerminalHandle,
     config: TerminalConfig,
-    stdout: std.fs.File,
+    stdout: std.Io.File,
+    io: std.Io,
     is_initialized: bool = false,
-
-    /// Get stdout handle in a cross-platform way for Zig 0.15+
-    fn getStdout() std.fs.File {
-        if (builtin.os.tag == .windows) {
-            const handle = std.os.windows.GetStdHandle(std.os.windows.STD_OUTPUT_HANDLE) catch unreachable;
-            return std.fs.File{ .handle = handle };
-        } else {
-            return std.fs.File{ .handle = std.posix.STDOUT_FILENO };
-        }
-    }
 
     /// Initialize the terminal
     pub fn init(config: TerminalConfig) !Terminal {
         var term = Terminal{
             .handle = platform.TerminalHandle.init(),
             .config = config,
-            .stdout = getStdout(),
+            .stdout = std.Io.File.stdout(),
+            .io = std.Io.Threaded.global_single_threaded.io(),
         };
 
         try term.setup();
@@ -155,32 +147,32 @@ pub const Terminal = struct {
 
         // Enter alternate screen
         if (self.config.alternate_screen) {
-            _ = try self.stdout.writeAll(Escape.enter_alt_screen);
+            try self.stdout.writeStreamingAll(self.io, Escape.enter_alt_screen);
         }
 
         // Hide cursor
         if (self.config.hide_cursor) {
-            _ = try self.stdout.writeAll(Escape.hide_cursor);
+            try self.stdout.writeStreamingAll(self.io, Escape.hide_cursor);
         }
 
         // Enable mouse
         if (self.config.enable_mouse) {
-            _ = try self.stdout.writeAll(Escape.enable_mouse);
+            try self.stdout.writeStreamingAll(self.io, Escape.enable_mouse);
         }
 
         // Enable paste mode
         if (self.config.enable_paste) {
-            _ = try self.stdout.writeAll(Escape.enable_paste);
+            try self.stdout.writeStreamingAll(self.io, Escape.enable_paste);
         }
 
         // Enable focus events
         if (self.config.enable_focus) {
-            _ = try self.stdout.writeAll(Escape.enable_focus);
+            try self.stdout.writeStreamingAll(self.io, Escape.enable_focus);
         }
 
         // Clear screen and move to home
-        _ = try self.stdout.writeAll(Escape.clear_screen);
-        _ = try self.stdout.writeAll(Escape.home);
+        try self.stdout.writeStreamingAll(self.io, Escape.clear_screen);
+        try self.stdout.writeStreamingAll(self.io, Escape.home);
 
         self.is_initialized = true;
     }
@@ -191,30 +183,30 @@ pub const Terminal = struct {
 
         // Disable focus events
         if (self.config.enable_focus) {
-            _ = self.stdout.writeAll(Escape.disable_focus) catch {};
+            self.stdout.writeStreamingAll(self.io, Escape.disable_focus) catch {};
         }
 
         // Disable paste mode
         if (self.config.enable_paste) {
-            _ = self.stdout.writeAll(Escape.disable_paste) catch {};
+            self.stdout.writeStreamingAll(self.io, Escape.disable_paste) catch {};
         }
 
         // Disable mouse
         if (self.config.enable_mouse) {
-            _ = self.stdout.writeAll(Escape.disable_mouse) catch {};
+            self.stdout.writeStreamingAll(self.io, Escape.disable_mouse) catch {};
         }
 
         // Show cursor
         if (self.config.hide_cursor) {
-            _ = self.stdout.writeAll(Escape.show_cursor) catch {};
+            self.stdout.writeStreamingAll(self.io, Escape.show_cursor) catch {};
         }
 
         // Reset styles
-        _ = self.stdout.writeAll(Escape.reset) catch {};
+        self.stdout.writeStreamingAll(self.io, Escape.reset) catch {};
 
         // Leave alternate screen
         if (self.config.alternate_screen) {
-            _ = self.stdout.writeAll(Escape.exit_alt_screen) catch {};
+            self.stdout.writeStreamingAll(self.io, Escape.exit_alt_screen) catch {};
         }
 
         // Restore raw mode
@@ -231,56 +223,56 @@ pub const Terminal = struct {
 
     /// Write raw bytes to the terminal
     pub fn write(self: *Terminal, bytes: []const u8) !void {
-        _ = try self.stdout.writeAll(bytes);
+        try self.stdout.writeStreamingAll(self.io, bytes);
     }
 
     /// Write formatted output using a buffer
     pub fn print(self: *Terminal, comptime fmt: []const u8, args: anytype) !void {
         var buf: [256]u8 = undefined;
         const output = std.fmt.bufPrint(&buf, fmt, args) catch return;
-        _ = try self.stdout.writeAll(output);
+        try self.stdout.writeStreamingAll(self.io, output);
     }
 
     /// Move cursor to position
     pub fn moveCursor(self: *Terminal, x: u16, y: u16) !void {
         var buf: [32]u8 = undefined;
         const output = std.fmt.bufPrint(&buf, "\x1b[{d};{d}H", .{ y + 1, x + 1 }) catch return;
-        _ = try self.stdout.writeAll(output);
+        try self.stdout.writeStreamingAll(self.io, output);
     }
 
     /// Clear the screen
     pub fn clear(self: *Terminal) !void {
-        _ = try self.stdout.writeAll(Escape.clear_screen);
-        _ = try self.stdout.writeAll(Escape.home);
+        try self.stdout.writeStreamingAll(self.io, Escape.clear_screen);
+        try self.stdout.writeStreamingAll(self.io, Escape.home);
     }
 
     /// Set foreground color (24-bit)
     pub fn setFgRGB(self: *Terminal, r: u8, g: u8, b: u8) !void {
         var buf: [32]u8 = undefined;
         const output = std.fmt.bufPrint(&buf, "\x1b[38;2;{d};{d};{d}m", .{ r, g, b }) catch return;
-        _ = try self.stdout.writeAll(output);
+        try self.stdout.writeStreamingAll(self.io, output);
     }
 
     /// Set background color (24-bit)
     pub fn setBgRGB(self: *Terminal, r: u8, g: u8, b: u8) !void {
         var buf: [32]u8 = undefined;
         const output = std.fmt.bufPrint(&buf, "\x1b[48;2;{d};{d};{d}m", .{ r, g, b }) catch return;
-        _ = try self.stdout.writeAll(output);
+        try self.stdout.writeStreamingAll(self.io, output);
     }
 
     /// Reset all attributes
     pub fn reset(self: *Terminal) !void {
-        _ = try self.stdout.writeAll(Escape.reset);
+        try self.stdout.writeStreamingAll(self.io, Escape.reset);
     }
 
     /// Show the cursor
     pub fn showCursor(self: *Terminal) !void {
-        _ = try self.stdout.writeAll(Escape.show_cursor);
+        try self.stdout.writeStreamingAll(self.io, Escape.show_cursor);
     }
 
     /// Hide the cursor
     pub fn hideCursor(self: *Terminal) !void {
-        _ = try self.stdout.writeAll(Escape.hide_cursor);
+        try self.stdout.writeStreamingAll(self.io, Escape.hide_cursor);
     }
 
     /// Flush output
@@ -310,7 +302,8 @@ pub const Capabilities = struct {
 
     /// Get terminal emulator name if available
     pub fn getTerminalEmulator() ?[]const u8 {
-        return std.process.getEnvVarOwned(std.heap.page_allocator, "TERM_PROGRAM") catch null;
+        const global_environ = std.process.Environ{ .block = .global };
+        return global_environ.getAlloc(std.heap.page_allocator, "TERM_PROGRAM") catch null;
     }
 };
 

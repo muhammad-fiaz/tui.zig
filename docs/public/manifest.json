@@ -1,0 +1,36 @@
+{
+  "name": "TUI.zig",
+  "short_name": "TUI.zig",
+  "description": "A modern Terminal User Interface library for Zig",
+  "start_url": "/tui.zig/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#f7a41d",
+  "orientation": "any",
+  "scope": "/tui.zig/",
+  "lang": "en",
+  "categories": ["developer", "programming", "utilities"],
+  "icons": [
+    {
+      "src": "/tui.zig/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Documentation",
+      "short_name": "Docs",
+      "url": "/tui.zig/guide/getting-started",
+      "description": "Getting started guide"
+    },
+    {
+      "name": "API Reference",
+      "short_name": "API",
+      "url": "/tui.zig/api/",
+      "description": "Complete API documentation"
+    }
+  ]
+}

@@ -6,7 +6,7 @@ The `InputField` provides a single-line text input with cursor management.
 
 ```zig
 const tui = @import("tui");
-const InputField = tui.widgets.InputField;
+const InputField = tui.InputField;
 ```
 
 ## Usage

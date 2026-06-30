@@ -156,7 +156,7 @@ pub const EventQueue = struct {
     pub fn init(allocator: std.mem.Allocator, max_size: usize) EventQueue {
         return .{
             .allocator = allocator,
-            .events = .{},
+            .events = .empty,
             .max_size = max_size,
         };
     }

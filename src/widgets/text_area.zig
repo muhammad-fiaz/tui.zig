@@ -61,9 +61,9 @@ pub const TextArea = struct {
 
     /// Create a text area
     pub fn init(allocator: std.mem.Allocator) TextArea {
-        var lines = std.ArrayListUnmanaged(std.ArrayListUnmanaged(u8)){};
+        var lines = std.ArrayListUnmanaged(std.ArrayListUnmanaged(u8)).empty;
         // Start with one empty line
-        lines.append(allocator, .{}) catch {};
+        lines.append(allocator, .empty) catch {};
 
         return .{
             .allocator = allocator,
@@ -97,14 +97,14 @@ pub const TextArea = struct {
         // Split content into lines
         var iter = std.mem.splitScalar(u8, content, '\n');
         while (iter.next()) |line_content| {
-            var line = std.ArrayListUnmanaged(u8){};
+            var line = std.ArrayListUnmanaged(u8).empty;
             try line.appendSlice(self.allocator, line_content);
             try self.lines.append(self.allocator, line);
         }
 
         // Ensure at least one line
         if (self.lines.items.len == 0) {
-            try self.lines.append(self.allocator, .{});
+            try self.lines.append(self.allocator, .empty);
         }
 
         self.cursor_line = 0;
@@ -143,7 +143,7 @@ pub const TextArea = struct {
             line.clearRetainingCapacity();
         }
         self.lines.clearRetainingCapacity();
-        self.lines.append(self.allocator, .{}) catch {};
+        self.lines.append(self.allocator, .empty) catch {};
         self.cursor_line = 0;
         self.cursor_col = 0;
         self.base.markDirty();
@@ -386,7 +386,7 @@ pub const TextArea = struct {
         const rest = current.items[self.cursor_col..];
 
         // Create new line with rest of current line
-        var new_line = std.ArrayListUnmanaged(u8){};
+        var new_line = std.ArrayListUnmanaged(u8).empty;
         try new_line.appendSlice(self.allocator, rest);
 
         // Truncate current line

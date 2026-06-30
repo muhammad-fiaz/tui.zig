@@ -25,7 +25,7 @@ fn windowsCtrlHandler(ctrl_type: u32) callconv(.winapi) std.os.windows.BOOL {
         if (handle.original_input_cp != 0) _ = kernel32.SetConsoleCP(handle.original_input_cp);
         if (handle.original_output_cp != 0) _ = kernel32.SetConsoleOutputCP(handle.original_output_cp);
     }
-    return 0;
+    return .FALSE;
 }
 
 /// Platform-specific terminal handle type
@@ -61,8 +61,8 @@ pub const WindowsHandle = struct {
 
     pub fn init() WindowsHandle {
         return .{
-            .stdout_handle = std.os.windows.GetStdHandle(std.os.windows.STD_OUTPUT_HANDLE) catch INVALID_HANDLE_VALUE,
-            .stdin_handle = std.os.windows.GetStdHandle(std.os.windows.STD_INPUT_HANDLE) catch INVALID_HANDLE_VALUE,
+            .stdout_handle = std.os.windows.peb().ProcessParameters.hStdOutput,
+            .stdin_handle = std.os.windows.peb().ProcessParameters.hStdInput,
         };
     }
 };
@@ -124,12 +124,10 @@ fn getWindowsTerminalSize() !TerminalSize {
         ) callconv(.winapi) std.os.windows.BOOL;
     };
 
-    const handle = std.os.windows.GetStdHandle(std.os.windows.STD_OUTPUT_HANDLE) catch {
-        return TerminalSize.default();
-    };
+    const handle = std.os.windows.peb().ProcessParameters.hStdOutput;
 
     var info: CONSOLE_SCREEN_BUFFER_INFO = undefined;
-    if (kernel32.GetConsoleScreenBufferInfo(handle, &info) == 0) {
+    if (kernel32.GetConsoleScreenBufferInfo(handle, &info) == .FALSE) {
         return TerminalSize.default();
     }
 
@@ -248,7 +246,7 @@ fn disableWindowsRawMode(handle: *WindowsHandle) void {
     };
 
     // Unregister control handler
-    _ = kernel32.SetConsoleCtrlHandler(windowsCtrlHandler, 0);
+    _ = kernel32.SetConsoleCtrlHandler(windowsCtrlHandler, .FALSE);
     saved_windows_handle = null;
 
     _ = kernel32.SetConsoleMode(handle.stdin_handle, handle.original_input_mode);
@@ -261,11 +259,9 @@ fn disableWindowsRawMode(handle: *WindowsHandle) void {
 
 /// Write bytes to terminal
 pub fn write(bytes: []const u8) !void {
-    const stdout = if (builtin.os.tag == .windows)
-        std.fs.File{ .handle = std.os.windows.GetStdHandle(std.os.windows.STD_OUTPUT_HANDLE) catch unreachable }
-    else
-        std.fs.File{ .handle = std.posix.STDOUT_FILENO };
-    _ = try stdout.writeAll(bytes);
+    const stdout = std.Io.File.stdout();
+    const io = std.Io.Threaded.global_single_threaded.io();
+    try stdout.writeStreamingAll(io, bytes);
 }
 
 /// Flush terminal output
@@ -281,9 +277,9 @@ pub fn isTerminal() bool {
             const kernel32 = struct {
                 extern "kernel32" fn GetConsoleMode(h: std.os.windows.HANDLE, mode: *u32) callconv(.winapi) std.os.windows.BOOL;
             };
-            const handle = std.os.windows.GetStdHandle(std.os.windows.STD_OUTPUT_HANDLE) catch return false;
+            const handle = std.os.windows.peb().ProcessParameters.hStdOutput;
             var mode: u32 = undefined;
-            return kernel32.GetConsoleMode(handle, &mode) != 0;
+            return kernel32.GetConsoleMode(handle, &mode) != .FALSE;
         },
         else => {
             return std.posix.isatty(std.posix.STDOUT_FILENO);
@@ -291,14 +287,20 @@ pub fn isTerminal() bool {
     }
 }
 
+/// Get an environment variable, returning null if not found
+fn getEnvOwned(allocator: std.mem.Allocator, key: []const u8) ?[]u8 {
+    const global_environ = std.process.Environ{ .block = .global };
+    return global_environ.getAlloc(allocator, key) catch null;
+}
+
 /// Get the terminal type from TERM environment variable
 pub fn getTermType() []const u8 {
-    return std.process.getEnvVarOwned(std.heap.page_allocator, "TERM") catch "xterm-256color";
+    return getEnvOwned(std.heap.page_allocator, "TERM") orelse "xterm-256color";
 }
 
 /// Check if the terminal supports true color (24-bit)
 pub fn supportsTrueColor() bool {
-    const colorterm = std.process.getEnvVarOwned(std.heap.page_allocator, "COLORTERM") catch return false;
+    const colorterm = getEnvOwned(std.heap.page_allocator, "COLORTERM") orelse return false;
     defer std.heap.page_allocator.free(colorterm);
     return std.mem.eql(u8, colorterm, "truecolor") or std.mem.eql(u8, colorterm, "24bit");
 }

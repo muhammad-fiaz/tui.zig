@@ -42,7 +42,7 @@ Contains all border drawing characters:
 
 ```zig
 const tui = @import("tui");
-const Border = tui.widgets.Border;
+const Border = tui.Border;
 
 var fullBorder = Border.all(.single);
 ```
@@ -78,7 +78,7 @@ var customBorder = Border{
 ### Integration with Other Widgets
 
 ```zig
-const Card = tui.widgets.Card;
+const Card = tui.Card;
 
 var borderedCard = Card.init("Card content with border")
     .withBorder(.rounded);
@@ -112,7 +112,7 @@ var starBorder = Border{
 
 ```zig
 const Layout = tui.layout.Layout;
-const Border = tui.widgets.Border;
+const Border = tui.Border;
 
 // Create a bordered layout section
 var sectionBorder = Border.all(.single);
@@ -190,7 +190,7 @@ var errorDialog = Dialog.init("Error")
 - No additional memory allocation required for border creation
 
 ```zig
-const BorderChars = tui.widgets.BorderChars;
+const BorderChars = tui.BorderChars;
 var customChars = BorderChars{
     .top_left = "*",
     .top_right = "*",

@@ -4,7 +4,7 @@
 # TUI.zig
 
 <a href="https://muhammad-fiaz.github.io/tui.zig/"><img src="https://img.shields.io/badge/docs-muhammad--fiaz.github.io-blue" alt="Documentation"></a>
-<a href="https://ziglang.org/"><img src="https://img.shields.io/badge/Zig-0.15.0+-orange.svg?logo=zig" alt="Zig Version"></a>
+<a href="https://ziglang.org/"><img src="https://img.shields.io/badge/Zig-0.16.0+-orange.svg?logo=zig" alt="Zig Version"></a>
 <a href="https://github.com/muhammad-fiaz/tui.zig"><img src="https://img.shields.io/github/stars/muhammad-fiaz/tui.zig" alt="GitHub stars"></a>
 <a href="https://github.com/muhammad-fiaz/tui.zig/issues"><img src="https://img.shields.io/github/issues/muhammad-fiaz/tui.zig" alt="GitHub issues"></a>
 <a href="https://github.com/muhammad-fiaz/tui.zig/pulls"><img src="https://img.shields.io/github/issues-pr/muhammad-fiaz/tui.zig" alt="GitHub pull requests"></a>
@@ -15,12 +15,12 @@
 <img src="https://img.shields.io/badge/platforms-linux%20%7C%20windows%20%7C%20macos-blue" alt="Supported Platforms">
 <a href="https://github.com/muhammad-fiaz/tui.zig/releases/latest"><img src="https://img.shields.io/github/v/release/muhammad-fiaz/tui.zig?label=Latest%20Release&style=flat-square" alt="Latest Release"></a>
 <a href="https://pay.muhammadfiaz.com"><img src="https://img.shields.io/badge/Sponsor-pay.muhammadfiaz.com-ff69b4?style=flat&logo=heart" alt="Sponsor"></a>
-<a href="https://github.com/sponsors/muhammad-fiaz"><img src="https://img.shields.io/badge/Sponsor-💖-pink?style=social&logo=github" alt="GitHub Sponsors"></a>
+<a href="https://github.com/sponsors/muhammad-fiaz"><img src="https://img.shields.io/badge/Sponsor-GitHub-pink?style=social&logo=github" alt="GitHub Sponsors"></a>
 <a href="https://hits.sh/github.com/muhammad-fiaz/tui.zig/"><img src="https://hits.sh/github.com/muhammad-fiaz/tui.zig.svg?label=Visitors&extraCount=0&color=green" alt="Repo Visitors"></a>
 
 <p><em>A modern, feature-rich Terminal User Interface library for Zig</em></p>
 
-<b>📚 <a href="https://muhammad-fiaz.github.io/tui.zig/">Documentation</a> |
+<b><a href="https://muhammad-fiaz.github.io/tui.zig/">Documentation</a> |
 <a href="https://muhammad-fiaz.github.io/tui.zig/api/">API Reference</a> |
 <a href="https://muhammad-fiaz.github.io/tui.zig/guide/getting-started">Quick Start</a> |
 <a href="https://muhammad-fiaz.github.io/tui.zig/contributing">Contributing</a></b>
@@ -30,13 +30,13 @@
 ---
 TUI.zig is a Modern and easy-to-use Terminal User Interface (TUI) library for the Zig programming language. It provides a rich set of features to create modern, responsive, and visually appealing terminal applications with minimal effort.
 
-> ⚠️ **Note:** TUI.zig is under active development. so expect frequent updates and improvements.
+> **Note:** TUI.zig is under active development. so expect frequent updates and improvements.
 
-## ✨ Features
+## Features
 
 TUI.zig provides a comprehensive Terminal User Interface library with cross-platform support:
 
-### 🎨 Rendering & Display
+### Rendering & Display
 
 - **True Color (24-bit RGB)** - Full spectrum color support
 - **256 Color Palette** - Fallback for older terminals
@@ -46,7 +46,7 @@ TUI.zig provides a comprehensive Terminal User Interface library with cross-plat
 - **Unicode Support** - Full grapheme cluster handling
 - **Wide Character Support** - CJK and emoji rendering
 
-### 🖱️ Input Handling
+### Input Handling
 
 - **Keyboard Events** - Full key detection with modifiers
 - **Mouse Support** - Click, drag, scroll, and hover
@@ -54,7 +54,7 @@ TUI.zig provides a comprehensive Terminal User Interface library with cross-plat
 - **Focus Events** - Window focus detection
 - **Raw Mode** - Direct terminal control
 
-### 🧩 Widget System
+### Widget System
 
 - **Text** - Styled text with alignment and wrapping
 - **Button** - Clickable buttons with hover states
@@ -72,28 +72,28 @@ TUI.zig provides a comprehensive Terminal User Interface library with cross-plat
 - **Split View** - Resizable panes
 - more...
 
-### 🎭 Styling & Themes
+### Styling & Themes
 
 - **Rich Text Styling** - Bold, italic, underline, strikethrough
 - **Built-in Themes** - Default, Dark, Light, Nord, Dracula, Gruvbox
 - **Custom Themes** - Create your own color schemes
 - **Border Styles** - Single, double, rounded, thick, ASCII
 
-### 📐 Layout System
+### Layout System
 
 - **Flex Layout** - Flexible row/column layouts
 - **Box Model** - Padding, margin, borders
 - **Constraints** - Min/max sizing
 - **Alignment** - Start, center, end, stretch
 
-### 🎬 Animation
+### Animation
 
 - **Easing Functions** - Linear, ease-in, ease-out, bounce, elastic
 - **Tween Animations** - Smooth value interpolation
 - **Timer System** - Scheduled callbacks
 - **FPS Counter** - Performance monitoring
 
-### 🌍 Cross-Platform
+### Cross-Platform
 
 - **Linux** - Full terminal support
 - **macOS** - Native terminal integration
@@ -102,11 +102,21 @@ TUI.zig provides a comprehensive Terminal User Interface library with cross-plat
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Installation
 
-Add TUI.zig to your project using Zig's package manager:
+#### Stable Release (Recommended)
+
+Install the latest stable release using a specific version tag:
+
+```bash
+zig fetch --save "git+https://github.com/muhammad-fiaz/tui.zig.git#0.0.2"
+```
+
+#### Development (Latest)
+
+Install the latest development version from the main branch:
 
 ```bash
 zig fetch --save git+https://github.com/muhammad-fiaz/tui.zig.git
@@ -147,7 +157,7 @@ const HelloWidget = struct {
         var screen = ctx.getSubScreen();
 
         // Center the message
-        const msg = "Hello, TUI.zig! 🚀";
+        const msg = "Hello, TUI.zig!";
         const x = (screen.width -| 18) / 2;
         const y = screen.height / 2;
 
@@ -196,7 +206,7 @@ const Counter = struct {
         // Instructions
         screen.setStyle(tui.Style.default.dim());
         screen.moveCursor(2, 4);
-        screen.putString("↑/↓ to change, Ctrl+C to quit");
+        screen.putString("Up/Down to change, Ctrl+C to quit");
     }
     pub fn handleEvent(self: *Counter, event: tui.Event) tui.EventResult {
         switch (event) {
@@ -224,7 +234,7 @@ pub fn main() !void {
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ```bash
 # Run all tests
@@ -236,7 +246,7 @@ zig build test -- --verbose
 
 ---
 
-## 📖 Documentation
+## Documentation
 
 Full documentation is available at [muhammad-fiaz.github.io/tui.zig](https://muhammad-fiaz.github.io/tui.zig/)
 
@@ -249,7 +259,7 @@ Full documentation is available at [muhammad-fiaz.github.io/tui.zig](https://muh
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please see our [Contributing Guide](https://muhammad-fiaz.github.io/tui.zig/contributing) for details.
 
@@ -261,23 +271,23 @@ Contributions are welcome! Please see our [Contributing Guide](https://muhammad-
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 💖 Support
+## Support
 
 If you find TUI.zig useful, consider:
 
-- ⭐ Starring the repository
-- 🐛 Reporting bugs or suggesting features
-- 📖 Improving documentation
-- 💰 [Sponsoring development](https://pay.muhammadfiaz.com)
+- Starring the repository
+- Reporting bugs or suggesting features
+- Improving documentation
+- [Sponsoring development](https://pay.muhammadfiaz.com)
 
 ---
 
 <div align="center">
-<p>Made with ❤️ by <a href="https://github.com/muhammad-fiaz">Muhammad Fiaz</a></p>
+<p>Made with care by <a href="https://github.com/muhammad-fiaz">Muhammad Fiaz</a></p>
 </div>

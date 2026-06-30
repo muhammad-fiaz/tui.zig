@@ -27,32 +27,25 @@ pub const Renderer = struct {
     last_y: u16,
 
     /// Stdout handle
-    stdout: std.fs.File,
+    stdout: std.Io.File,
+    /// IO context for writes
+    io: std.Io,
 
     /// Statistics
     cells_drawn: usize = 0,
     cells_skipped: usize = 0,
-
-    /// Get stdout handle in a cross-platform way for Zig 0.15+
-    fn getStdout() std.fs.File {
-        if (builtin.os.tag == .windows) {
-            const handle = std.os.windows.GetStdHandle(std.os.windows.STD_OUTPUT_HANDLE) catch unreachable;
-            return std.fs.File{ .handle = handle };
-        } else {
-            return std.fs.File{ .handle = std.posix.STDOUT_FILENO };
-        }
-    }
 
     /// Create a new renderer
     pub fn init(allocator: std.mem.Allocator) Renderer {
         return .{
             .allocator = allocator,
             .prev_buffer = null,
-            .output_buffer = .{},
+            .output_buffer = .empty,
             .current_style = .{},
             .last_x = 0,
             .last_y = 0,
-            .stdout = getStdout(),
+            .stdout = std.Io.File.stdout(),
+            .io = std.Io.Threaded.global_single_threaded.io(),
         };
     }
 
@@ -99,7 +92,7 @@ pub const Renderer = struct {
         try buf_writer.writeAll(terminal.Escape.show_cursor);
 
         // Write all output at once
-        _ = try self.stdout.writeAll(self.output_buffer.items);
+        try self.stdout.writeStreamingAll(self.io, self.output_buffer.items);
 
         // Update previous buffer
         if (self.prev_buffer) |*prev| {
@@ -230,23 +223,21 @@ pub const RenderStats = struct {
 
 /// Simple immediate-mode renderer (no diffing)
 pub const ImmediateRenderer = struct {
-    stdout: std.fs.File,
+    stdout: std.Io.File,
+    io: std.Io,
     current_style: Style = .{},
 
     pub fn init() ImmediateRenderer {
-        const stdout = if (builtin.os.tag == .windows)
-            std.fs.File{ .handle = std.os.windows.GetStdHandle(std.os.windows.STD_OUTPUT_HANDLE) catch unreachable }
-        else
-            std.fs.File{ .handle = std.posix.STDOUT_FILENO };
         return .{
-            .stdout = stdout,
+            .stdout = std.Io.File.stdout(),
+            .io = std.Io.Threaded.global_single_threaded.io(),
         };
     }
 
     pub fn render(self: *ImmediateRenderer, screen_buf: *const Screen) !void {
         // Clear and home
-        _ = try self.stdout.writeAll(terminal.Escape.clear_screen);
-        _ = try self.stdout.writeAll(terminal.Escape.home);
+        try self.stdout.writeStreamingAll(self.io, terminal.Escape.clear_screen);
+        try self.stdout.writeStreamingAll(self.io, terminal.Escape.home);
 
         for (0..screen_buf.height) |y| {
             for (0..screen_buf.width) |x| {
@@ -257,22 +248,22 @@ pub const ImmediateRenderer = struct {
                         // Write style using buffer
                         var buf: [64]u8 = undefined;
                         const len = cell.style.toAnsiBuf(&buf);
-                        _ = try self.stdout.writeAll(buf[0..len]);
+                        try self.stdout.writeStreamingAll(self.io, buf[0..len]);
                         self.current_style = cell.style;
                     }
 
                     // Write cell content
                     var cell_buf: [8]u8 = undefined;
                     const cell_len = cell.writeToBuffer(&cell_buf);
-                    _ = try self.stdout.writeAll(cell_buf[0..cell_len]);
+                    try self.stdout.writeStreamingAll(self.io, cell_buf[0..cell_len]);
                 }
             }
             if (y + 1 < screen_buf.height) {
-                _ = try self.stdout.writeAll("\r\n");
+                try self.stdout.writeStreamingAll(self.io, "\r\n");
             }
         }
 
-        _ = try self.stdout.writeAll(terminal.Escape.reset);
+        try self.stdout.writeStreamingAll(self.io, terminal.Escape.reset);
     }
 };
 

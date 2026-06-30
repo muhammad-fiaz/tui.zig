@@ -1,0 +1,8 @@
+# robots.txt for TUI.zig Documentation
+# https://muhammad-fiaz.github.io/tui.zig/
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://muhammad-fiaz.github.io/tui.zig/sitemap.xml

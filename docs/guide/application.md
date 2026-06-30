@@ -29,7 +29,7 @@ You can configure the application behaviors via `AppConfig`:
 ```zig
 const app = try tui.App.init(.{
     // Use a specific theme
-    .theme = tui.Theme.nord_theme,
+    .theme = tui.Theme.nord,
 
     // Set custom FPS limit (default: 60)
     .target_fps = 30,

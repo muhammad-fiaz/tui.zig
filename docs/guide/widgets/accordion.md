@@ -42,8 +42,8 @@ The `Accordion` widget provides a collapsible interface for displaying multiple 
 
 ```zig
 const tui = @import("tui");
-const Accordion = tui.widgets.Accordion;
-const AccordionItem = tui.widgets.AccordionItem;
+const Accordion = tui.Accordion;
+const AccordionItem = tui.AccordionItem;
 
 var items = [_]AccordionItem{
     .{

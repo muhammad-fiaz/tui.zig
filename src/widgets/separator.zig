@@ -5,6 +5,7 @@ const std = @import("std");
 const widget = @import("widget.zig");
 const Style = @import("../style/style.zig").Style;
 const Color = @import("../style/color.zig").Color;
+const unicode = @import("../unicode/unicode.zig");
 
 pub const SeparatorOrientation = enum {
     horizontal,
@@ -118,5 +119,45 @@ pub const Separator = struct {
                 .thick => "┃",
             };
         }
+    }
+
+    pub fn sizeHint(self: *Separator) widget.SizeHint {
+        if (self.orientation == .horizontal) {
+            const label_width: u16 = if (self.label) |l| @intCast(unicode.stringWidth(l) + 4) else 0;
+            return .{
+                .min_width = label_width,
+                .preferred_width = 0,
+                .min_height = 1,
+                .preferred_height = 1,
+            };
+        } else {
+            return .{
+                .min_width = 1,
+                .preferred_width = 1,
+                .min_height = 0,
+                .preferred_height = 0,
+            };
+        }
+    }
+
+    pub fn isFocusable(self: *Separator) bool {
+        _ = self;
+        return false;
+    }
+
+    test "separator creation" {
+        const sep = Separator.init();
+        try std.testing.expectEqual(SeparatorOrientation.horizontal, sep.orientation);
+    }
+
+    test "separator with label" {
+        const sep = Separator.init().withLabel("Section");
+        try std.testing.expect(sep.label != null);
+    }
+
+    test "separator size hint" {
+        var sep = Separator.init();
+        const hint = sep.sizeHint();
+        try std.testing.expectEqual(@as(u16, 1), hint.min_height);
     }
 };

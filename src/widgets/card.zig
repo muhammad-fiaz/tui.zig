@@ -6,6 +6,7 @@ const widget = @import("widget.zig");
 const Style = @import("../style/style.zig").Style;
 const Color = @import("../style/color.zig").Color;
 const border_mod = @import("border.zig");
+const unicode = @import("../unicode/unicode.zig");
 
 pub const Card = struct {
     title: ?[]const u8 = null,
@@ -112,5 +113,46 @@ pub const Card = struct {
             sub.moveCursor(self.padding + 1, footer_y + 1);
             sub.putString(footer);
         }
+    }
+
+    pub fn sizeHint(self: *Card) widget.SizeHint {
+        const content_width = unicode.stringWidth(self.content);
+        const title_width = if (self.title) |t| unicode.stringWidth(t) else 0;
+        const max_content = @max(content_width, title_width);
+        const total_width: u16 = @intCast(max_content + (self.padding + 1) * 2 + 2);
+        var line_count: u16 = 1;
+        var lines = std.mem.splitSequence(u8, self.content, "\n");
+        while (lines.next()) |_| line_count += 1;
+        var total_height: u16 = line_count + self.padding * 2 + 2;
+        if (self.title != null) total_height += 2;
+        if (self.footer != null) total_height += 2;
+        return .{
+            .min_width = total_width,
+            .preferred_width = total_width,
+            .min_height = total_height,
+            .preferred_height = total_height,
+        };
+    }
+
+    pub fn isFocusable(self: *Card) bool {
+        _ = self;
+        return false;
+    }
+
+    test "card creation" {
+        const card = Card.init("Hello");
+        try std.testing.expectEqualStrings("Hello", card.content);
+    }
+
+    test "card with title" {
+        const card = Card.init("Body").withTitle("Title");
+        try std.testing.expect(card.title != null);
+    }
+
+    test "card size hint" {
+        var card = Card.init("Test content");
+        const hint = card.sizeHint();
+        try std.testing.expect(hint.min_width > 0);
+        try std.testing.expect(hint.min_height > 0);
     }
 };

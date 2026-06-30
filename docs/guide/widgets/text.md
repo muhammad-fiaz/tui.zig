@@ -6,7 +6,7 @@ The `Text` widget displays a static or styled string.
 
 ```zig
 const tui = @import("tui");
-const Text = tui.widgets.Text;
+const Text = tui.Text;
 ```
 
 ## Basic Usage

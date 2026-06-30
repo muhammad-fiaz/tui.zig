@@ -5,6 +5,7 @@ const std = @import("std");
 const widget = @import("widget.zig");
 const Style = @import("../style/style.zig").Style;
 const Color = @import("../style/color.zig").Color;
+const unicode = @import("../unicode/unicode.zig");
 
 pub const BadgeVariant = enum {
     default,
@@ -75,5 +76,39 @@ pub const Badge = struct {
             .medium => 2,
             .large => 3,
         };
+    }
+
+    pub fn sizeHint(self: *Badge) widget.SizeHint {
+        const text_width = unicode.stringWidth(self.text);
+        const padding = self.getPadding();
+        const total: u16 = @intCast(text_width + padding * 2);
+        return .{
+            .min_width = total,
+            .preferred_width = total,
+            .min_height = 1,
+            .preferred_height = 1,
+        };
+    }
+
+    pub fn isFocusable(self: *Badge) bool {
+        _ = self;
+        return false;
+    }
+
+    test "badge creation" {
+        const badge = Badge.init("Test");
+        try std.testing.expectEqualStrings("Test", badge.text);
+    }
+
+    test "badge with variant" {
+        const badge = Badge.init("Success").withVariant(.success);
+        try std.testing.expectEqual(BadgeVariant.success, badge.variant);
+    }
+
+    test "badge size hint" {
+        var badge = Badge.init("Hi");
+        const hint = badge.sizeHint();
+        try std.testing.expect(hint.min_width > 0);
+        try std.testing.expectEqual(@as(u16, 1), hint.min_height);
     }
 };

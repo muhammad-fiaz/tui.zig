@@ -4,6 +4,7 @@ const std = @import("std");
 const widget = @import("widget.zig");
 const Style = @import("../style/style.zig").Style;
 const Color = @import("../style/color.zig").Color;
+const unicode = @import("../unicode/unicode.zig");
 
 pub const StatusItem = struct {
     text: []const u8,
@@ -39,6 +40,33 @@ pub const Statusbar = struct {
             sub.moveCursor(x, 0);
             sub.putString(item.text);
         }
+    }
+
+    pub fn sizeHint(self: *Statusbar) widget.SizeHint {
+        var max_width: u16 = 0;
+        for (self.items) |item| {
+            const w: u16 = @intCast(unicode.stringWidth(item.text) + 4);
+            if (w > max_width) max_width = w;
+        }
+        return .{
+            .min_width = max_width,
+            .preferred_width = 0,
+            .min_height = 1,
+            .preferred_height = 1,
+            .expand_x = true,
+        };
+    }
+
+    pub fn isFocusable(self: *Statusbar) bool {
+        _ = self;
+        return false;
+    }
+
+    test "statusbar size hint" {
+        const items = [_]StatusItem{.{ .text = "Ready" }};
+        var sb = Statusbar.init(&items);
+        const hint = sb.sizeHint();
+        try std.testing.expectEqual(@as(u16, 1), hint.min_height);
     }
 };
 

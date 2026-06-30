@@ -148,6 +148,33 @@ pub const Accordion = struct {
             item.expanded = false;
         }
     }
+
+    pub fn sizeHint(self: *Accordion) widget.SizeHint {
+        var height: u16 = 0;
+        for (self.items) |item| {
+            height += 1;
+            if (item.expanded) {
+                var lines = std.mem.splitSequence(u8, item.content, "\n");
+                while (lines.next()) |_| height += 1;
+                height += 1;
+            }
+        }
+        return .{
+            .min_width = 10,
+            .preferred_width = 40,
+            .min_height = height,
+            .preferred_height = height,
+        };
+    }
+
+    pub fn isFocusable(self: *Accordion) bool {
+        return !self.base.state.disabled;
+    }
+
+    pub fn setFocus(self: *Accordion, focused: bool) void {
+        self.base.state.focused = focused;
+        self.base.markDirty();
+    }
 };
 
 test "Accordion creation" {

@@ -93,11 +93,11 @@ TUI.zig includes several built-in themes:
 ```zig
 // Available themes
 tui.Theme.default_theme      // Default dark theme
-tui.Theme.dark_theme         // Pure dark theme
-tui.Theme.light_theme        // Light theme
-tui.Theme.nord_theme         // Nord color scheme
-tui.Theme.dracula_theme      // Dracula color scheme
-tui.Theme.gruvbox_theme      // Gruvbox color scheme
+tui.Theme.dark               // Pure dark theme
+tui.Theme.light              // Light theme
+tui.Theme.nord               // Nord color scheme
+tui.Theme.dracula            // Dracula color scheme
+tui.Theme.gruvbox            // Gruvbox color scheme
 tui.Theme.high_contrast      // High contrast for accessibility
 ```
 
@@ -105,32 +105,36 @@ tui.Theme.high_contrast      // High contrast for accessibility
 
 ```zig
 var app = try tui.App.init(.{
-    .theme = tui.Theme.nord_theme,
+    .theme = tui.Theme.nord,
 });
 ```
 
 ### Theme Structure
 
-A theme defines colors for various UI elements:
+A theme defines colors and styles for various UI elements:
 
 ```zig
 const Theme = struct {
     primary: Color,
     secondary: Color,
+    accent: Color,
     background: Color,
     surface: Color,
-    text: Color,
-    text_muted: Color,
-    border: Color,
-    success: Color,
-    warning: Color,
+    foreground: Color,
+    muted: Color,
     error_color: Color,
-    // Widget-specific styles
-    input: Style,
-    input_focus: Style,
+    warning: Color,
+    success: Color,
+    info: Color,
+    text: Style,
+    focus: Style,
+    selected: Style,
+    disabled: Style,
     button: Style,
     button_hover: Style,
-    button_press: Style,
+    button_pressed: Style,
+    input: Style,
+    input_focus: Style,
     // ... and more
 };
 ```
@@ -143,9 +147,8 @@ const my_theme = tui.Theme{
     .secondary = tui.Color.rgb(150, 100, 255),
     .background = tui.Color.rgb(20, 20, 30),
     .surface = tui.Color.rgb(30, 30, 45),
-    .text = tui.Color.rgb(240, 240, 250),
-    .text_muted = tui.Color.rgb(150, 150, 170),
-    .border = tui.Color.rgb(60, 60, 80),
+    .foreground = tui.Color.rgb(240, 240, 250),
+    .muted = tui.Color.rgb(150, 150, 170),
     .success = tui.Color.rgb(100, 255, 150),
     .warning = tui.Color.rgb(255, 200, 100),
     .error_color = tui.Color.rgb(255, 100, 100),
@@ -176,7 +179,7 @@ tui.BorderStyle.ascii     // +-+ | | +-+
 Widgets accept style configuration:
 
 ```zig
-var button = tui.widgets.Button.init("Submit")
+var button = tui.Button.init("Submit", null)
     .withStyle(tui.Style.default.setFg(tui.Color.white).setBg(tui.Color.blue))
     .withHoverStyle(tui.Style.default.setFg(tui.Color.white).setBg(tui.Color.cyan))
     .withPressStyle(tui.Style.default.setFg(tui.Color.black).setBg(tui.Color.white));

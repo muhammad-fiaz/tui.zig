@@ -37,7 +37,7 @@ None - the badge is a static display widget that doesn't handle user input.
 
 ```zig
 const tui = @import("tui");
-const Badge = tui.widgets.Badge;
+const Badge = tui.Badge;
 
 var activeBadge = Badge.init("Active").withVariant(.success);
 var inactiveBadge = Badge.init("Inactive").withVariant(.secondary);

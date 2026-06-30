@@ -252,14 +252,6 @@ pub const BorderStyle = enum {
 };
 ```
 
-## Constants
-
-```zig
-// Version
-pub const version = std.SemanticVersion{ .major = 0, .minor = 1, .patch = 0 };
-pub const version_string = "0.1.0";
-```
-
 ## Utilities
 
 ### Unicode

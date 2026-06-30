@@ -21,10 +21,10 @@ Display styled text with alignment and wrapping:
 const tui = @import("tui");
 
 // Simple text
-var text = tui.widgets.Text.init("Hello, World!");
+var text = tui.Text.init("Hello, World!");
 
 // Styled text
-var styled = tui.widgets.Text.init("Important!")
+var styled = tui.Text.init("Important!")
     .withStyle(tui.Style.default.setFg(tui.Color.red).bold())
     .withAlignment(.center);
 ```
@@ -34,7 +34,7 @@ var styled = tui.widgets.Text.init("Important!")
 Clickable buttons with hover and press states:
 
 ```zig
-var button = tui.widgets.Button.init("Click Me!")
+var button = tui.Button.init("Click Me!", null)
     .withOnClick(onButtonClick);
 
 fn onButtonClick() void {
@@ -47,7 +47,7 @@ fn onButtonClick() void {
 Single-line text input with cursor:
 
 ```zig
-var input = tui.widgets.InputField.init(allocator)
+var input = tui.InputField.init(allocator)
     .withPlaceholder("Enter your name...")
     .withMaxLength(50);
 
@@ -60,7 +60,7 @@ const value = input.getValue();
 Multi-line text editing:
 
 ```zig
-var textarea = tui.widgets.TextArea.init(allocator)
+var textarea = tui.TextArea.init(allocator)
     .withLineNumbers()
     .withWordWrap();
 
@@ -73,7 +73,7 @@ try textarea.setText("Line 1\nLine 2\nLine 3");
 Toggle checkboxes:
 
 ```zig
-var checkbox = tui.widgets.Checkbox.init("Enable feature");
+var checkbox = tui.Checkbox.init("Enable feature", null);
 
 // Check state
 if (checkbox.isChecked()) {
@@ -86,7 +86,7 @@ if (checkbox.isChecked()) {
 Visual progress indicators:
 
 ```zig
-var progress = tui.widgets.Progress.init()
+var progress = tui.ProgressBar.init()
     .withLabel("Loading...")
     .withShowPercentage(true);
 
@@ -99,27 +99,28 @@ progress.setValue(0.75);
 Animated loading indicators:
 
 ```zig
-var spinner = tui.widgets.Spinner.init(.dots)
+var spinner = tui.Spinner.initPreset(.dots)
     .withLabel("Processing...");
 
 // In your render loop, update the animation
 spinner.tick();
 ```
 
-Available spinner styles:
+Available spinner presets:
 
-- `.dots` - ⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧
-- `.line` - - \ | /
-- `.circle` - ◐ ◓ ◑ ◒
-- `.square` - ◰ ◳ ◲ ◱
-- `.arrow` - ← ↖ ↑ ↗ → ↘ ↓ ↙
+- `.dots` - Braille dots animation
+- `.line` - Line rotation (- \ | /)
+- `.dots_scrolling` - Scrolling dots
+- `.star` - Star animation
+- `.box_bounce` - Bouncing box
+- `.arrow` - Arrow rotation
 
 ### List View
 
 Scrollable item lists with selection:
 
 ```zig
-var list = tui.widgets.ListView.init(allocator, []const u8);
+var list = tui.ListView.init(allocator, []const u8);
 
 try list.addItem("Item 1");
 try list.addItem("Item 2");
@@ -136,7 +137,7 @@ if (list.getSelectedItem()) |item| {
 Data tables with columns:
 
 ```zig
-var table = tui.widgets.Table.init(allocator);
+var table = tui.Table.init(allocator);
 
 try table.addColumn("Name", 20);
 try table.addColumn("Email", 30);
@@ -151,7 +152,7 @@ try table.addRow(.{ "Jane Smith", "jane@example.com", "User" });
 Tabbed navigation:
 
 ```zig
-var tabs = tui.widgets.Tabs.init(allocator);
+var tabs = tui.Tabs.init(allocator);
 
 try tabs.addTab("Home", &home_widget);
 try tabs.addTab("Settings", &settings_widget);
@@ -163,12 +164,267 @@ try tabs.addTab("Help", &help_widget);
 Dialog overlays:
 
 ```zig
-var modal = tui.widgets.Modal.init(allocator)
+var modal = tui.Modal.init(allocator)
     .withTitle("Confirm Action")
     .withContent(&confirm_widget)
     .withButtons(.{ "OK", "Cancel" });
 
 modal.show();
+```
+
+### Accordion
+
+Collapsible content sections with single or multiple expansion:
+
+```zig
+var items = [_]tui.AccordionItem{
+    .{ .title = "Section 1", .content = "Content for section 1" },
+    .{ .title = "Section 2", .content = "Content for section 2" },
+};
+var accordion = tui.Accordion.init(&items)
+    .withMode(.single);
+```
+
+### Alert
+
+Status messages and notifications:
+
+```zig
+var alert = tui.Alert.init("Warning", "Disk space is low");
+alert.show();
+```
+
+### AlertDialog
+
+Confirmation dialogs with action buttons:
+
+```zig
+var dialog = tui.AlertDialog.init("Delete File", "Are you sure?");
+dialog.on_confirm = onConfirm;
+dialog.on_cancel = onCancel;
+```
+
+### Badge
+
+Labels, tags, and status indicators:
+
+```zig
+var badge = tui.Badge.init("New")
+    .withVariant(.success)
+    .withSize(.small);
+```
+
+### Breadcrumb
+
+Navigation breadcrumb trail:
+
+```zig
+const items = [_]tui.BreadcrumbItem{
+    .{ .label = "Home" },
+    .{ .label = "Products" },
+    .{ .label = "Electronics" },
+};
+var breadcrumb = tui.Breadcrumb.init(&items);
+```
+
+### Card
+
+Grouped content with optional borders and headers:
+
+```zig
+var card = tui.Card.init("Card content here")
+    .withTitle("My Card")
+    .withFooter("Card footer");
+```
+
+### Grid
+
+Layout grid for arranging widgets:
+
+```zig
+var grid = tui.Grid.init(3, 2); // 3 rows, 2 columns
+```
+
+### Image
+
+Image display with Kitty, iTerm2, Sixel, and ASCII protocol support:
+
+```zig
+var img = tui.Image.init(data, 80, 24)
+    .withProtocol(.ascii);
+```
+
+### Menu
+
+Dropdown and context menus:
+
+```zig
+const items = [_]tui.MenuItem{
+    .{ .label = "Open" },
+    .{ .label = "Save" },
+    .{ .separator = true },
+    .{ .label = "Exit" },
+};
+var menu = tui.Menu.init(&items);
+```
+
+### Navbar
+
+Top navigation bar:
+
+```zig
+const items = [_]tui.NavItem{
+    .{ .label = "Home" },
+    .{ .label = "About" },
+    .{ .label = "Contact" },
+};
+var navbar = tui.Navbar.init(&items);
+```
+
+### Pagination
+
+Page navigation controls:
+
+```zig
+var pagination = tui.Pagination.init(10) // 10 pages
+    .withOnChange(onPageChange);
+```
+
+### Radio
+
+Radio button groups for single selection:
+
+```zig
+const options = [_]tui.RadioOption{
+    .{ .label = "Option A", .value = 0 },
+    .{ .label = "Option B", .value = 1 },
+    .{ .label = "Option C", .value = 2 },
+};
+var radio = tui.RadioGroup.init(&options)
+    .withOnChange(onRadioChange);
+```
+
+### Scroll View
+
+Scrollable content container:
+
+```zig
+var scroll = tui.ScrollView.init(&content_widget);
+```
+
+### Separator
+
+Visual content dividers:
+
+```zig
+var sep = tui.Separator.init()
+    .withOrientation(.horizontal)
+    .withStyle(.double);
+```
+
+### Sidebar
+
+Side navigation panel:
+
+```zig
+const items = [_]tui.SidebarItem{
+    .{ .label = "Dashboard" },
+    .{ .label = "Settings" },
+    .{ .label = "Profile" },
+};
+var sidebar = tui.Sidebar.init(&items);
+```
+
+### Skeleton
+
+Loading placeholders with shimmer animation:
+
+```zig
+var skeleton = tui.Skeleton.init(.rectangle)
+    .withSize(30, 5);
+```
+
+### Slider
+
+Numeric slider input:
+
+```zig
+var slider = tui.Slider.init(0.0, 100.0)
+    .withValue(50.0)
+    .withStep(5.0);
+```
+
+### Split View
+
+Side-by-side content panels:
+
+```zig
+var split = tui.SplitView.init(&left_panel, &right_panel)
+    .withDirection(.horizontal)
+    .withRatio(0.3);
+```
+
+### Statusbar
+
+Bottom status bar:
+
+```zig
+const items = [_]tui.StatusItem{
+    .{ .text = "Ready", .alignment = .left },
+    .{ .text = "Ln 1, Col 1", .alignment = .right },
+};
+var statusbar = tui.Statusbar.init(&items);
+```
+
+### Switch
+
+Toggle switch for boolean settings:
+
+```zig
+var switch = tui.Switch.init("Dark mode");
+```
+
+### Toast
+
+Temporary notification popups:
+
+```zig
+var toast = tui.Toast.init("File saved successfully");
+var manager = tui.ToastManager.init(allocator);
+try manager.show(toast);
+```
+
+### Tooltip
+
+Contextual help on hover:
+
+```zig
+var tooltip = tui.Tooltip.init("Click to save")
+    .withPosition(.bottom);
+tooltip.show();
+```
+
+### Tree
+
+Hierarchical tree view:
+
+```zig
+var nodes = [_]tui.TreeNode{
+    .{ .label = "Root" },
+    .{ .label = "Child 1" },
+    .{ .label = "Child 2" },
+};
+var tree = tui.TreeView.init(&nodes);
+```
+
+### Border
+
+Border drawing utilities:
+
+```zig
+var border = tui.Border.init()
+    .withStyle(.double)
+    .withTitle("Panel");
 ```
 
 ## Creating Custom Widgets

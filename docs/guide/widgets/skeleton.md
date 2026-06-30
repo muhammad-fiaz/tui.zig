@@ -31,7 +31,7 @@ None - this widget is not interactive.
 
 ```zig
 const tui = @import("tui");
-const Skeleton = tui.widgets.Skeleton;
+const Skeleton = tui.Skeleton;
 
 var skeleton = Skeleton.init(.rectangle)
     .withSize(20, 1);

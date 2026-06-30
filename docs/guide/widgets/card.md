@@ -32,7 +32,7 @@ None - the card is a static display container.
 
 ```zig
 const tui = @import("tui");
-const Card = tui.widgets.Card;
+const Card = tui.Card;
 
 var card = Card.init("This is the card content.");
 ```

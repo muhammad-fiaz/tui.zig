@@ -3,6 +3,7 @@
 const std = @import("std");
 const widget = @import("widget.zig");
 const Style = @import("../style/style.zig").Style;
+const unicode = @import("../unicode/unicode.zig");
 
 pub const ImageProtocol = enum {
     kitty,
@@ -141,6 +142,20 @@ pub const Image = struct {
                 sub.putChar(chars[char_idx]);
             }
         }
+    }
+
+    pub fn sizeHint(self: *Image) widget.SizeHint {
+        return .{
+            .min_width = self.width,
+            .preferred_width = self.width,
+            .min_height = self.height,
+            .preferred_height = self.height,
+        };
+    }
+
+    pub fn isFocusable(self: *Image) bool {
+        _ = self;
+        return false;
     }
 };
 

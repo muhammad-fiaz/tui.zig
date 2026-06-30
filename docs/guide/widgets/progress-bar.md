@@ -6,13 +6,13 @@ Visualizes progress of a task.
 
 ```zig
 const tui = @import("tui");
-const Progress = tui.widgets.Progress;
+const ProgressBar = tui.ProgressBar;
 ```
 
 ## Usage
 
 ```zig
-var p = Progress.init();
+var p = ProgressBar.init();
 p.setValue(0.5); // 50%
 ```
 

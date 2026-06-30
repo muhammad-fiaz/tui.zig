@@ -34,7 +34,7 @@ The `Pagination` widget provides navigation controls for multi-page content. It 
 
 ```zig
 const tui = @import("tui");
-const Pagination = tui.widgets.Pagination;
+const Pagination = tui.Pagination;
 
 var pagination = Pagination.init(10);
 ```

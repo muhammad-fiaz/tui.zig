@@ -25,8 +25,8 @@ None - this widget is not interactive.
 
 ```zig
 const tui = @import("tui");
-const Statusbar = tui.widgets.Statusbar;
-const StatusItem = tui.widgets.StatusItem;
+const Statusbar = tui.Statusbar;
+const StatusItem = tui.StatusItem;
 
 const items = [_]StatusItem{
     .{ .text = "Ready", .alignment = .left },
