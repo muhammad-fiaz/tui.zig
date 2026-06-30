@@ -302,8 +302,8 @@ pub const Capabilities = struct {
 
     /// Get terminal emulator name if available
     pub fn getTerminalEmulator() ?[]const u8 {
-        const global_environ = std.process.Environ{ .block = .global };
-        return global_environ.getAlloc(std.heap.page_allocator, "TERM_PROGRAM") catch null;
+        const value = std.c.getenv("TERM_PROGRAM") orelse return null;
+        return std.heap.page_allocator.dupe(u8, std.mem.span(value)) catch null;
     }
 };
 

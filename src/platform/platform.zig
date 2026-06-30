@@ -282,15 +282,15 @@ pub fn isTerminal() bool {
             return kernel32.GetConsoleMode(handle, &mode) != .FALSE;
         },
         else => {
-            return std.posix.isatty(std.posix.STDOUT_FILENO);
+            return std.c.isatty(std.posix.STDOUT_FILENO) != 0;
         },
     }
 }
 
 /// Get an environment variable, returning null if not found
-fn getEnvOwned(allocator: std.mem.Allocator, key: []const u8) ?[]u8 {
-    const global_environ = std.process.Environ{ .block = .global };
-    return global_environ.getAlloc(allocator, key) catch null;
+fn getEnvOwned(allocator: std.mem.Allocator, key: [*:0]const u8) ?[]u8 {
+    const value = std.c.getenv(key) orelse return null;
+    return allocator.dupe(u8, std.mem.span(value)) catch null;
 }
 
 /// Get the terminal type from TERM environment variable
