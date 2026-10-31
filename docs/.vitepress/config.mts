@@ -1,5 +1,7 @@
 import { defineConfig } from 'vitepress'
 
+import llmstxt from 'vitepress-plugin-llms';
+const SITE_URL = "https://muhammad-fiaz.github.io/tui.zig";
 // Google Analytics and Google Tag Manager IDs
 export const GA_ID = "G-6BVYCRK57P";
 export const GTM_ID = "GTM-P4M9T8ZR";
@@ -12,7 +14,11 @@ export default defineConfig({
   description: 'A modern Terminal User Interface library for Zig',
   base: '/tui.zig/',
   lastUpdated: true,
-  cleanUrls: true,
+  cleanUrls: false,
+
+  vite: {
+    plugins: [llmstxt()],
+  },
 
   head: [
     ['link', { rel: 'icon', href: '/tui.zig/favicon.ico' }],
@@ -45,19 +51,64 @@ export default defineConfig({
     `],
     // Google AdSense
     ['script', { async: true, src: `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT_ID}`, crossorigin: 'anonymous' }],
-    // Google Tag Manager (noscript)
-    ['noscript', {}, `
-      <iframe src="https://www.googletagmanager.com/ns.html?id=${GTM_ID}"
-      height="0" width="0" style="display:none;visibility:hidden"></iframe>
-    `],
+    // Microsoft Clarity
+    [
+      "script",
+      {},
+      `(function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+      })(window, document, "clarity", "script", "z5vdzih779");`,
+    ],
   ],
 
   sitemap: {
-    hostname: 'https://muhammad-fiaz.github.io/tui.zig',
+    hostname: 'https://muhammad-fiaz.github.io/tui.zig/',
     lastmodDateOnly: false,
     xml: {
       spaces: 4,
     },
+  },
+
+  transformPageData(pageData) {
+    const cleanPath = pageData.relativePath.replace(/\.md$/, '');
+    let canonicalUrl: string;
+    if (cleanPath === 'index') {
+      canonicalUrl = 'https://muhammad-fiaz.github.io/tui.zig/';
+    } else if (cleanPath.endsWith('/index')) {
+      canonicalUrl = `https://muhammad-fiaz.github.io/tui.zig/${cleanPath.slice(0, -'index'.length)}`;
+    } else {
+      canonicalUrl = `https://muhammad-fiaz.github.io/tui.zig/${cleanPath}.html`;
+    }
+    pageData.frontmatter.head ??= [];
+    pageData.frontmatter.head.push(['link', { rel: 'canonical', href: canonicalUrl }]);
+
+    const breadcrumbParts = cleanPath.split('/').filter((part: string) => part && part !== 'index')
+    if (breadcrumbParts.length > 0) {
+      pageData.frontmatter.head.push([
+        'script',
+        { type: 'application/ld+json' },
+        JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/` },
+            {
+              '@type': 'ListItem',
+              position: 2,
+              name: pageData.title || breadcrumbParts[breadcrumbParts.length - 1],
+              item: canonicalUrl,
+            },
+          ],
+        }),
+      ])
+    }
+  },
+
+  transformHtml(html) {
+    const noscript = `<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=${GTM_ID}" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>`;
+    return html.replace(/<body([^>]*)>/, `<body$1>\n    ${noscript}`);
   },
 
   themeConfig: {
