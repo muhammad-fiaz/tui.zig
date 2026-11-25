@@ -160,14 +160,14 @@ pub const Image = struct {
 };
 
 test "Image creation" {
-    const data = [_]u8{0} ** 100;
+    const data: [100]u8 = @splat(0);
     const img = Image.init(&data, 10, 10);
     try std.testing.expectEqual(@as(u16, 10), img.width);
     try std.testing.expectEqual(@as(u16, 10), img.height);
 }
 
 test "Image with protocol" {
-    const data = [_]u8{128} ** 100;
+    const data: [100]u8 = @splat(128);
     const img = Image.init(&data, 10, 10).withProtocol(.kitty);
     try std.testing.expectEqual(ImageProtocol.kitty, img.protocol);
 }

@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- **Zig 0.16.0** or later — [Download Zig](https://ziglang.org/download/)
+- **Zig 0.17.0** or later — [Download Zig](https://ziglang.org/download/)
 - No other dependencies required — TUI.zig is a pure Zig library
 
 ## Install via Zig Package Manager (Recommended)
