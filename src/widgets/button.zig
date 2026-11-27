@@ -1,207 +1,196 @@
-//! Button widget for TUI.zig
+//! Interactive `Button` widget supporting compact 1-row pills and 3-row bordered cards.
 
 const std = @import("std");
-const widget = @import("widget.zig");
-const layout = @import("../layout/layout.zig");
-const style_mod = @import("../style/style.zig");
-const theme_mod = @import("../style/theme.zig");
-const events = @import("../event/events.zig");
-const input = @import("../event/input.zig");
-const unicode = @import("../unicode/unicode.zig");
-const screen_mod = @import("../core/screen.zig");
+const core_root = @import("../core/root.zig");
+const style_root = @import("../style/root.zig");
+const text_root = @import("../text/root.zig");
+const event_root = @import("../event/root.zig");
+const block_mod = @import("block.zig");
+const testing = std.testing;
 
-pub const RenderContext = widget.RenderContext;
-pub const StatefulWidget = widget.StatefulWidget;
-pub const SizeHint = widget.SizeHint;
-pub const EventResult = widget.EventResult;
-pub const Style = style_mod.Style;
-pub const Theme = theme_mod.Theme;
-pub const Event = events.Event;
-pub const Key = input.Key;
-pub const Rect = layout.Rect;
+pub const Rect = core_root.Rect;
+pub const Alignment = core_root.Alignment;
+pub const Ui = core_root.Ui;
+pub const Style = style_root.Style;
+pub const BorderSides = style_root.BorderSides;
+pub const BorderType = style_root.BorderType;
+pub const Block = block_mod.Block;
+pub const Event = event_root.Event;
 
-/// Button widget
+/// Visual emphasis variant for a `Button`.
+pub const ButtonVariant = enum {
+    primary,
+    secondary,
+    outline,
+    ghost,
+    danger,
+    success,
+};
+
+/// Clickable / focusable button widget.
+///
+/// Renders either as a 3-row bordered box when `area.height >= 3 and !compact`,
+/// or a single-row interactive badge `[ Label ]` when compact or `area.height < 3`.
 pub const Button = struct {
-    /// Button label
     label: []const u8,
-
-    /// Click callback
-    on_click: ?*const fn () void = null,
-
-    /// Normal style
-    style: Style = .{},
-
-    /// Hover style
-    hover_style: ?Style = null,
-
-    /// Pressed style
-    pressed_style: ?Style = null,
-
-    /// Focused style
+    focused: bool = false,
+    disabled: bool = false,
+    pressed: bool = false,
+    variant: ButtonVariant = .secondary,
+    border_type: BorderType = .rounded,
+    compact: bool = false,
+    alignment: Alignment = .center,
+    icon: ?[]const u8 = null,
+    shortcut: ?[]const u8 = null,
+    style: ?Style = null,
     focused_style: ?Style = null,
 
-    /// Disabled style
-    disabled_style: ?Style = null,
-
-    /// Base widget state
-    base: StatefulWidget = .{},
-
-    /// Create a button
-    pub fn init(label: []const u8, on_click: ?*const fn () void) Button {
-        return .{
-            .label = label,
-            .on_click = on_click,
-        };
-    }
-
-    /// Set normal style
-    pub fn withStyle(self: Button, s: Style) Button {
-        var result = self;
-        result.style = s;
-        return result;
-    }
-
-    /// Set hover style
-    pub fn withHoverStyle(self: Button, s: Style) Button {
-        var result = self;
-        result.hover_style = s;
-        return result;
-    }
-
-    /// Render the button
-    pub fn render(self: *Button, ctx: *RenderContext) void {
-        const current_style = self.getCurrentStyle(ctx.theme);
-        var sub = ctx.getSubScreen();
-        sub.setStyle(current_style);
-
-        // Clear background
-        sub.clear();
-
-        // Calculate label position (centered)
-        const label_width = unicode.stringWidth(self.label);
-        const x_offset = if (sub.width > label_width)
-            (sub.width - @as(u16, @intCast(label_width))) / 2
-        else
-            0;
-
-        const y_offset = sub.height / 2;
-
-        // Draw brackets or border
-        if (sub.width >= 4) {
-            sub.moveCursor(0, y_offset);
-            sub.putString("[");
-            sub.moveCursor(sub.width - 1, y_offset);
-            sub.putString("]");
-        }
-
-        // Draw label
-        sub.moveCursor(x_offset, y_offset);
-        sub.putString(self.label);
-    }
-
-    fn getCurrentStyle(self: *Button, theme: *const Theme) Style {
-        if (self.base.state.disabled) {
-            return self.disabled_style orelse theme.disabled;
-        }
-        if (self.base.state.pressed) {
-            return self.pressed_style orelse theme.button_pressed;
-        }
-        if (self.base.state.hovered) {
-            return self.hover_style orelse theme.button_hover;
-        }
-        if (self.base.state.focused) {
-            return self.focused_style orelse theme.focus;
-        }
-        return self.style.merge(theme.button);
-    }
-
-    /// Handle events
-    pub fn handleEvent(self: *Button, event: Event) EventResult {
-        if (self.base.state.disabled) return .ignored;
-
+    /// Returns `true` if `event` represents a mouse left-click inside `bounds`
+    /// or `Enter` / `Space` while `focused`.
+    pub fn isActivated(event: Event, bounds: Rect, focused: bool) bool {
         switch (event) {
-            .key => |key_event| {
-                if (key_event.key == .enter or key_event.key == .space) {
-                    self.activate();
-                    return .consumed;
-                }
+            .mouse => |m| return m.isLeftClickInside(bounds),
+            .key => |k| {
+                if (!focused or k.kind == .release) return false;
+                return k.code == .enter or k.isChar(' ');
             },
-            .mouse => |mouse_event| {
-                switch (mouse_event.kind) {
-                    .press => {
-                        if (mouse_event.button == .left) {
-                            self.base.state.pressed = true;
-                            self.base.markDirty();
-                            return .consumed;
-                        }
-                    },
-                    .release => {
-                        if (self.base.state.pressed) {
-                            self.base.state.pressed = false;
-                            self.activate();
-                            return .consumed;
-                        }
-                    },
-                    .move => {
-                        self.base.state.hovered = true;
-                        self.base.markDirty();
-                        return .needs_redraw;
-                    },
-                    else => {},
-                }
-            },
-            else => {},
-        }
-
-        return .ignored;
-    }
-
-    fn activate(self: *Button) void {
-        self.base.state.pressed = false;
-        self.base.markDirty();
-
-        if (self.on_click) |callback| {
-            callback();
+            else => return false,
         }
     }
 
-    /// Check if focusable
-    pub fn isFocusable(self: *Button) bool {
-        return !self.base.state.disabled;
+    /// Respects `self.disabled` and `self.focused` when checking activation inside `bounds`.
+    pub fn handleEvent(self: Button, event: Event, bounds: Rect) bool {
+        if (self.disabled) return false;
+        return isActivated(event, bounds, self.focused);
     }
 
-    /// Set focus
-    pub fn setFocus(self: *Button, focused: bool) void {
-        self.base.state.focused = focused;
-        self.base.markDirty();
+    /// Computes recommended compact width in columns (`<= max_cap`).
+    pub fn preferredWidth(self: Button) u16 {
+        var w = text_root.displayWidth(self.label);
+        if (self.icon) |ic| w +|= text_root.displayWidth(ic) + 1;
+        if (self.shortcut) |sc| w +|= text_root.displayWidth(sc) + 3;
+        return w +| 4;
     }
 
-    /// Get size hint
-    pub fn sizeHint(self: *Button) SizeHint {
-        const label_width = unicode.stringWidth(self.label);
-        return .{
-            .min_width = @intCast(label_width + 4),
-            .preferred_width = @intCast(label_width + 4),
-            .min_height = 1,
-            .preferred_height = 1,
+    /// Renders this button onto `ui` inside `area`.
+    pub fn render(self: Button, ui: *Ui, area: Rect) !void {
+        const bounds = area.intersection(ui.buffer.area);
+        if (bounds.isEmpty()) return;
+
+        const base_style = self.resolveBaseStyle(ui.theme);
+        const eff_compact = self.compact or bounds.height < 3 or self.variant == .ghost;
+
+        var content_buf: [256]u8 = undefined;
+        const caption = self.formatCaption(&content_buf, eff_compact);
+
+        if (eff_compact) {
+            ui.buffer.fill(bounds, " ", base_style);
+            const cap_w = text_root.displayWidth(caption);
+            const draw_w = @min(cap_w, bounds.width);
+            const x: u16 = switch (self.alignment) {
+                .left => bounds.left(),
+                .center => bounds.left() + (bounds.width - draw_w) / 2,
+                .right => bounds.right() - draw_w,
+            };
+            const y = bounds.top() + bounds.height / 2;
+            _ = ui.buffer.setStringClipped(x, y, caption, draw_w, base_style, bounds);
+            return;
+        }
+
+        const border_s: Style = if (self.disabled)
+            ui.theme.disabled
+        else if (self.focused)
+            ui.theme.border_focused
+        else switch (self.variant) {
+            .primary => ui.theme.accent,
+            .danger => ui.theme.err,
+            .success => ui.theme.success,
+            else => ui.theme.border,
         };
+
+        const blk = Block{
+            .borders = BorderSides.all,
+            .border_type = self.border_type,
+            .border_style = border_s,
+            .style = base_style,
+            .fill_background = true,
+            .focused = self.focused,
+        };
+        try blk.render(ui, bounds);
+        const inner = blk.inner(bounds);
+        if (inner.isEmpty()) return;
+
+        const cap_w = text_root.displayWidth(caption);
+        const draw_w = @min(cap_w, inner.width);
+        const x: u16 = switch (self.alignment) {
+            .left => inner.left(),
+            .center => inner.left() + (inner.width - draw_w) / 2,
+            .right => inner.right() - draw_w,
+        };
+        const y = inner.top() + inner.height / 2;
+        _ = ui.buffer.setStringClipped(x, y, caption, draw_w, base_style, inner);
     }
 
-    /// Layout
-    pub fn layout(self: *Button, bounds: Rect) void {
-        self.base.bounds = bounds;
+    fn resolveBaseStyle(self: Button, theme: *const style_root.Theme) Style {
+        if (self.disabled) return theme.disabled;
+        if (self.focused) {
+            if (self.focused_style) |fs| return fs;
+            return switch (self.variant) {
+                .danger => theme.err.patch(.{ .reverse = true, .bold = true }),
+                .success => theme.success.patch(.{ .reverse = true, .bold = true }),
+                else => theme.button_focused,
+            };
+        }
+        if (self.style) |s| return s;
+        var s = switch (self.variant) {
+            .primary => theme.accent.patch(.{ .bold = true }),
+            .danger => theme.err.patch(.{ .bold = true }),
+            .success => theme.success.patch(.{ .bold = true }),
+            .outline, .ghost => theme.text,
+            .secondary => theme.button,
+        };
+        if (self.pressed) s = s.patch(.{ .reverse = true });
+        return s;
+    }
+
+    fn formatCaption(self: Button, out: *[256]u8, compact_mode: bool) []const u8 {
+        var fbs = std.Io.Writer.fixed(out);
+        if (compact_mode) {
+            fbs.writeAll(if (self.focused) "[ " else "  ") catch return self.label;
+        }
+        if (self.icon) |ic| {
+            fbs.writeAll(ic) catch {};
+            fbs.writeByte(' ') catch {};
+        }
+        fbs.writeAll(self.label) catch {};
+        if (self.shortcut) |sc| {
+            fbs.print(" ({s})", .{sc}) catch {};
+        }
+        if (compact_mode) {
+            fbs.writeAll(if (self.focused) " ]" else "  ") catch {};
+        }
+        return fbs.buffered();
     }
 };
 
-test "button creation" {
-    const btn = Button.init("Click Me", null);
-    try std.testing.expectEqualStrings("Click Me", btn.label);
-}
+test "button renders compact and bordered modes and checks activation" {
+    const alloc = testing.allocator;
+    var buf = try core_root.Buffer.init(alloc, Rect.init(0, 0, 20, 4));
+    defer buf.deinit();
+    var scratch = std.heap.ArenaAllocator.init(alloc);
+    defer scratch.deinit();
+    var cursor: ?core_root.Position = null;
+    const theme = style_root.Theme.dark;
 
-test "button focusable" {
-    var btn = Button.init("Test", null);
-    try std.testing.expect(btn.isFocusable());
+    var ui = Ui.init(&buf, &theme, &scratch, &cursor, buf.area, 4);
+    const btn = Button{ .label = "Save", .focused = true, .variant = .primary };
+    try ui.renderWidget(btn, Rect.init(0, 0, 14, 3));
 
-    btn.base.state.disabled = true;
-    try std.testing.expect(!btn.isFocusable());
+    const snap = try buf.toPlainTextAlloc(alloc);
+    defer alloc.free(snap);
+    try testing.expect(std.mem.indexOf(u8, snap, "Save") != null);
+
+    try testing.expect(Button.isActivated(.{ .key = .{ .code = .enter } }, Rect.init(0, 0, 14, 3), true));
+    try testing.expect(Button.isActivated(.{ .mouse = .{ .kind = .down, .button = .left, .x = 3, .y = 1 } }, Rect.init(0, 0, 14, 3), false));
+    try testing.expect(!Button.isActivated(.{ .mouse = .{ .kind = .down, .button = .left, .x = 18, .y = 1 } }, Rect.init(0, 0, 14, 3), true));
 }

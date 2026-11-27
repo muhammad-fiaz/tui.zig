@@ -1,441 +1,266 @@
-//! # TUI.zig
-//!
-//! A high-performance, Unicode-correct, cross-platform Terminal UI framework
-//! written purely in Zig.
-//!
-//! ## Features
-//!
-//! - **Zero runtime dependencies** - Pure Zig implementation
-//! - **Unicode-correct rendering** - Full grapheme cluster support
-//! - **Composable widget system** - Build complex UIs from simple parts
-//! - **Retained-mode UI** - Efficient diff-based rendering
-//! - **Event-driven architecture** - Non-blocking input handling
-//! - **Cross-platform** - Linux, macOS, Windows (ConPTY)
-//!
-//! ## Quick Start
-//!
-//! ```zig
-//! const tui = @import("tui");
-//!
-//! pub fn main() !void {
-//!     var app = try tui.App.init(.{});
-//!     defer app.deinit();
-//!
-//!     try app.setRoot(
-//!         tui.FlexColumn(.{
-//!             tui.Text("Hello TUI.zig"),
-//!             tui.Button("Click Me", onClick),
-//!         })
-//!     );
-//!
-//!     try app.run();
-//! }
-//! ```
+//! tui.zig: A native, production-grade terminal user interface library for Zig.
 
 const std = @import("std");
-
-// ============================================
-// Core Modules
-// ============================================
-
-/// Terminal handling and raw mode
-pub const terminal = @import("core/terminal.zig");
-
-/// Screen buffer and cell management
-pub const screen = @import("core/screen.zig");
-
-/// Cell representation with styling
-pub const cell = @import("core/cell.zig");
-
-/// Diff-based renderer
-pub const renderer = @import("core/renderer.zig");
-
-// ============================================
-// Event System
-// ============================================
-
-/// Event types and handling
-pub const events = @import("event/events.zig");
-
-/// Input handling (keyboard, mouse)
-pub const input = @import("event/input.zig");
-
-// ============================================
-// Layout Engine
-// ============================================
-
-/// Layout system and constraints
-pub const layout = @import("layout/layout.zig");
-
-/// Box model and sizing
-pub const box = @import("layout/box.zig");
-
-/// Flex layout (row/column)
-pub const flex = @import("layout/flex.zig");
-
-// ============================================
-// Widget System
-// ============================================
-
-/// Base widget trait and utilities
-pub const widget = @import("widgets/widget.zig");
-
-/// Text widget
-pub const text = @import("widgets/text.zig");
-
-/// Button widget
-pub const button = @import("widgets/button.zig");
-
-/// Input field widget
-pub const input_field = @import("widgets/input_field.zig");
-
-/// Checkbox widget
-pub const checkbox = @import("widgets/checkbox.zig");
-
-/// Progress bar widget
-pub const progress = @import("widgets/progress.zig");
-
-/// Spinner widget
-pub const spinner = @import("widgets/spinner.zig");
-
-/// List view widget
-pub const list_view = @import("widgets/list_view.zig");
-
-/// Table widget
-pub const table = @import("widgets/table.zig");
-
-/// Scroll view widget
-pub const scroll_view = @import("widgets/scroll_view.zig");
-
-/// Modal/overlay widget
-pub const modal = @import("widgets/modal.zig");
-
-/// Tabs widget
-pub const tabs = @import("widgets/tabs.zig");
-
-/// Split view widget
-pub const split_view = @import("widgets/split_view.zig");
-
-/// Text area widget
-pub const text_area = @import("widgets/text_area.zig");
-
-/// Radio button widget
-pub const radio = @import("widgets/radio.zig");
-
-/// Menu widget
-pub const menu = @import("widgets/menu.zig");
-
-/// Tree view widget
-pub const tree = @import("widgets/tree.zig");
-
-/// Border styles
-pub const border = @import("widgets/border.zig");
-
-/// Accordion widget
-pub const accordion = @import("widgets/accordion.zig");
-
-/// Alert widgets
-pub const alert = @import("widgets/alert.zig");
-
-/// Badge widget
-pub const badge = @import("widgets/badge.zig");
-
-/// Card widget
-pub const card = @import("widgets/card.zig");
-
-/// Slider widget
-pub const slider = @import("widgets/slider.zig");
-
-/// Switch widget
-pub const switch_widget = @import("widgets/switch.zig");
-
-/// Tooltip widget
-pub const tooltip = @import("widgets/tooltip.zig");
-
-/// Toast notification
-pub const toast = @import("widgets/toast.zig");
-
-/// Skeleton loader
-pub const skeleton = @import("widgets/skeleton.zig");
-
-/// Separator widget
-pub const separator = @import("widgets/separator.zig");
-
-/// Breadcrumb navigation
-pub const breadcrumb = @import("widgets/breadcrumb.zig");
-
-/// Pagination widget
-pub const pagination = @import("widgets/pagination.zig");
-
-/// Navbar widget
-pub const navbar = @import("widgets/navbar.zig");
-
-/// Sidebar widget
-pub const sidebar = @import("widgets/sidebar.zig");
-
-/// Statusbar widget
-pub const statusbar = @import("widgets/statusbar.zig");
-
-/// Grid layout
-pub const grid = @import("widgets/grid.zig");
-
-/// Image display
-pub const image = @import("widgets/image.zig");
-
-// ============================================
-// Styling
-// ============================================
-
-/// Colors and color utilities
-pub const color = @import("style/color.zig");
-
-/// Style definitions
-pub const style = @import("style/style.zig");
-
-/// Theme system
-pub const theme = @import("style/theme.zig");
-
-// ============================================
-// Unicode Support
-// ============================================
-
-/// Unicode utilities and grapheme handling
-pub const unicode = @import("unicode/unicode.zig");
-
-/// Display width calculation
-pub const width = @import("unicode/width.zig");
-
-// ============================================
-// Platform Abstraction
-// ============================================
-
-/// Platform-specific implementations
-pub const platform = @import("platform/platform.zig");
-
-// ============================================
-// Animation System
-// ============================================
-
-/// Animation and tweening
-pub const animation = @import("animation/animation.zig");
-
-// ============================================
-// Application Core
-// ============================================
-
-/// Main application struct
-pub const App = @import("app.zig").App;
-
-/// Application configuration
-pub const AppConfig = @import("app.zig").AppConfig;
-
-// ============================================
-// Convenience Re-exports
-// ============================================
-
-/// Create a text widget
-pub const Text = text.Text;
-
-/// Create a button widget
-pub const Button = button.Button;
-
-/// Create an input field
-pub const InputField = input_field.InputField;
-
-/// Create a checkbox
-pub const Checkbox = checkbox.Checkbox;
-
-/// Create a progress bar
-pub const ProgressBar = progress.ProgressBar;
-
-/// Create a spinner
-pub const Spinner = spinner.Spinner;
-
-/// Create a list view
-pub const ListView = list_view.ListView;
-
-/// Create a table
-pub const Table = table.Table;
-
-/// Create a scroll view
-pub const ScrollView = scroll_view.ScrollView;
-
-/// Create a modal overlay
-pub const Modal = modal.Modal;
-
-/// Create tabs
-pub const Tabs = tabs.Tabs;
-
-/// Create a split view
-pub const SplitView = split_view.SplitView;
-
-/// Create a text area
-pub const TextArea = text_area.TextArea;
-
-/// Create a radio group
-pub const RadioGroup = radio.RadioGroup;
-
-/// Create a menu
-pub const Menu = menu.Menu;
-
-/// Create a tree view
-pub const TreeView = tree.TreeView;
-
-/// Border style type
-pub const BorderStyle = border.BorderStyle;
-
-/// Border chars
-pub const BorderChars = border.BorderChars;
-
-/// Border configuration
-pub const Border = border.Border;
-
-/// Create an accordion
-pub const Accordion = accordion.Accordion;
-
-/// Create an alert
-pub const Alert = alert.Alert;
-
-/// Create an alert dialog
-pub const AlertDialog = alert.AlertDialog;
-
-/// Create a badge
-pub const Badge = badge.Badge;
-
-/// Badge variant type
-pub const BadgeVariant = badge.BadgeVariant;
-
-/// Badge size type
-pub const BadgeSize = badge.BadgeSize;
-
-/// Accordion item type
-pub const AccordionItem = accordion.AccordionItem;
-
-/// Accordion mode type
-pub const AccordionMode = accordion.AccordionMode;
-
-/// Breadcrumb item type
-pub const BreadcrumbItem = breadcrumb.BreadcrumbItem;
-
-/// Nav item type
-pub const NavItem = navbar.NavItem;
-
-/// Menu item type
-pub const MenuItem = menu.MenuItem;
-
-/// Radio option type
-pub const RadioOption = radio.RadioOption;
-
-/// Sidebar item type
-pub const SidebarItem = sidebar.SidebarItem;
-
-/// Status item type
-pub const StatusItem = statusbar.StatusItem;
-
-/// Tree node type
-pub const TreeNode = tree.TreeNode;
-
-/// Tooltip position type
-pub const TooltipPosition = tooltip.TooltipPosition;
-
-/// Skeleton variant type
-pub const SkeletonVariant = skeleton.SkeletonVariant;
-
-/// Create a card
-pub const Card = card.Card;
-
-/// Create a slider
-pub const Slider = slider.Slider;
-
-/// Create a switch
-pub const Switch = switch_widget.Switch;
-
-/// Create a tooltip
-pub const Tooltip = tooltip.Tooltip;
-
-/// Create a toast
-pub const Toast = toast.Toast;
-
-/// Toast manager
-pub const ToastManager = toast.ToastManager;
-
-/// Create a skeleton loader
-pub const Skeleton = skeleton.Skeleton;
-
-/// Create a separator
-pub const Separator = separator.Separator;
-
-/// Create breadcrumb navigation
-pub const Breadcrumb = breadcrumb.Breadcrumb;
-
-/// Create pagination
-pub const Pagination = pagination.Pagination;
-
-/// Create navbar
-pub const Navbar = navbar.Navbar;
-
-/// Create sidebar
-pub const Sidebar = sidebar.Sidebar;
-
-/// Create statusbar
-pub const Statusbar = statusbar.Statusbar;
-
-/// Create grid layout
-pub const Grid = grid.Grid;
-
-/// Create image display
-pub const Image = image.Image;
-
-/// Flex column layout
-pub const FlexColumn = flex.FlexColumn;
-
-/// Flex row layout
-pub const FlexRow = flex.FlexRow;
-
-/// Padding layout
-pub const Padding = layout.Padding;
-
-/// Center layout
-pub const Center = layout.Center;
-
-/// Sized box layout
-pub const SizedBox = layout.SizedBox;
-
-/// Margin layout
-pub const Margin = layout.Margin;
-
-/// Rect type
-pub const Rect = layout.Rect;
-
-/// Color type
-pub const Color = color.Color;
-
-/// Style type
+const testing = std.testing;
+
+pub const version = "0.1.0";
+pub const minimum_zig_version = "0.17.0";
+
+pub const style = @import("style/root.zig");
+pub const core = @import("core/root.zig");
+pub const text = @import("text/root.zig");
+pub const event = @import("event/root.zig");
+pub const backend = @import("backend/root.zig");
+pub const terminal = @import("terminal/root.zig");
+pub const widgets = @import("widgets/root.zig");
+pub const schema = @import("zigantic");
+
+pub const Color = style.Color;
 pub const Style = style.Style;
+pub const Modifiers = style.Modifiers;
+pub const UnderlineStyle = style.UnderlineStyle;
+pub const BorderSides = style.BorderSides;
+pub const BorderSet = style.BorderSet;
+pub const BorderType = style.BorderType;
+pub const MergeStrategy = style.MergeStrategy;
+pub const Theme = style.Theme;
+pub const Capability = style.Capability;
+pub const IconSet = style.IconSet;
+pub const Marker = style.Marker;
+pub const palette = style.palette;
+pub const symbols = style.symbols;
 
-/// Theme type
-pub const Theme = theme.Theme;
+pub const Position = core.Position;
+pub const Size = core.Size;
+pub const Offset = core.Offset;
+pub const Rect = core.Rect;
+pub const Margin = core.Margin;
+pub const Padding = core.Padding;
+pub const Alignment = core.Alignment;
+pub const VerticalAlignment = core.VerticalAlignment;
+pub const Direction = core.Direction;
+pub const Flex = core.Flex;
+pub const Spacing = core.Spacing;
+pub const Constraint = core.Constraint;
+pub const Layout = core.Layout;
+pub const LayoutOptions = core.LayoutOptions;
+pub const Cell = core.Cell;
+pub const CellDiffOption = core.CellDiffOption;
+pub const Buffer = core.Buffer;
+pub const BufferDiff = core.BufferDiff;
+pub const Viewport = core.Viewport;
+pub const AppInfo = core.AppInfo;
+pub const CursorShape = core.CursorShape;
+pub const BackendMode = core.BackendMode;
+pub const EnterOptionsSchema = core.EnterOptionsSchema;
+pub const EnterOptions = core.EnterOptions;
+pub const AppSettingsSchema = core.AppSettingsSchema;
+pub const AppSettings = core.AppSettings;
+pub const AppOptions = core.AppOptions;
+pub const ThemeSpecSchema = core.ThemeSpecSchema;
+pub const ThemeSpec = core.ThemeSpec;
+pub const Ui = core.Ui;
+pub const Frame = core.Frame;
 
-/// Event type
-pub const Event = events.Event;
+pub const Backend = backend.Backend;
+pub const TerminalCapabilities = backend.TerminalCapabilities;
+pub const ClearType = backend.ClearType;
+pub const App = terminal.App;
 
-/// Key type
-pub const Key = input.Key;
+/// Primary centralized initialization entry point for `tui.zig`.
+///
+/// Requires an explicit `allocator` and accepts `.{}` defaults or overrides via `AppOptions`.
+/// Call `defer app.deinit();` to ensure terminal restoration and resource cleanup.
+pub fn init(allocator: std.mem.Allocator, options: AppOptions) !App {
+    return App.init(allocator, options);
+}
 
-/// Mouse event type
-pub const Mouse = events.MouseEvent;
+/// Returns `true` when `flag` is present in `args` (cross-platform across Windows, POSIX, and WASI).
+pub fn hasArg(args: std.process.Args, allocator: std.mem.Allocator, flag: []const u8) bool {
+    var it = args.iterateAllocator(allocator) catch return false;
+    defer it.deinit();
+    while (it.next()) |arg| {
+        if (std.mem.eql(u8, arg, flag)) return true;
+    }
+    return false;
+}
 
-/// Render context for widgets
-pub const RenderContext = widget.RenderContext;
+pub const Span = text.Span;
+pub const Line = text.Line;
+pub const Text = text.Text;
+pub const Masked = text.Masked;
+pub const WrapMode = text.WrapMode;
+pub const Truncation = text.Truncation;
+pub const TextDirection = text.TextDirection;
+pub const LocaleEntry = text.LocaleEntry;
+pub const Locale = text.Locale;
+pub const BitmapGlyph = text.BitmapGlyph;
+pub const FontRenderMode = text.FontRenderMode;
+pub const BitmapFont = text.BitmapFont;
 
-/// Result of event handling
-pub const EventResult = widget.EventResult;
+pub const Event = event.Event;
+pub const KeyEvent = event.KeyEvent;
+pub const KeyCode = event.KeyCode;
+pub const KeyModifiers = event.KeyModifiers;
+pub const KeyEventKind = event.KeyEventKind;
+pub const MouseEvent = event.MouseEvent;
+pub const MouseButton = event.MouseButton;
+pub const MouseEventKind = event.MouseEventKind;
+pub const EventParser = event.EventParser;
 
-// ============================================
-// Tests
-// ============================================
+pub const Clear = widgets.Clear;
+pub const Fill = widgets.Fill;
+pub const Spacer = widgets.Spacer;
+pub const Divider = widgets.Divider;
+pub const TitlePosition = widgets.TitlePosition;
+pub const Title = widgets.Title;
+pub const Shadow = widgets.Shadow;
+pub const Block = widgets.Block;
+pub const ScrollOffset = widgets.ScrollOffset;
+pub const Paragraph = widgets.Paragraph;
+pub const Gauge = widgets.Gauge;
+pub const LineGauge = widgets.LineGauge;
+pub const ProgressBar = widgets.ProgressBar;
+pub const Spinner = widgets.Spinner;
+pub const ScrollbarOrientation = widgets.ScrollbarOrientation;
+pub const ScrollbarState = widgets.ScrollbarState;
+pub const Scrollbar = widgets.Scrollbar;
+pub const ButtonVariant = widgets.ButtonVariant;
+pub const Button = widgets.Button;
+pub const CheckState = widgets.CheckState;
+pub const Checkbox = widgets.Checkbox;
+pub const RadioState = widgets.RadioState;
+pub const RadioGroup = widgets.RadioGroup;
+pub const ValidationStatus = widgets.ValidationStatus;
+pub const ValidationResult = widgets.ValidationResult;
+pub const InputAction = widgets.InputAction;
+pub const TextInputState = widgets.TextInputState;
+pub const TextInput = widgets.TextInput;
+pub const CursorLineCol = widgets.CursorLineCol;
+pub const TextAreaState = widgets.TextAreaState;
+pub const TextArea = widgets.TextArea;
+pub const HighlightSpacing = widgets.HighlightSpacing;
+pub const ListDirection = widgets.ListDirection;
+pub const ListItem = widgets.ListItem;
+pub const ListState = widgets.ListState;
+pub const List = widgets.List;
+pub const TableCell = widgets.TableCell;
+pub const TableRow = widgets.TableRow;
+pub const TableState = widgets.TableState;
+pub const Table = widgets.Table;
+pub const Tabs = widgets.Tabs;
+pub const SelectState = widgets.SelectState;
+pub const Select = widgets.Select;
+pub const TreeNode = widgets.TreeNode;
+pub const TreeState = widgets.TreeState;
+pub const Tree = widgets.Tree;
+pub const RenderDirection = widgets.RenderDirection;
+pub const Sparkline = widgets.Sparkline;
+pub const Bar = widgets.Bar;
+pub const BarGroup = widgets.BarGroup;
+pub const BarChart = widgets.BarChart;
+pub const Bounds = widgets.Bounds;
+pub const Point = widgets.Point;
+pub const PixelGrid = widgets.PixelGrid;
+pub const Painter = widgets.Painter;
+pub const Shape = widgets.Shape;
+pub const Canvas = widgets.Canvas;
+pub const GraphType = widgets.GraphType;
+pub const Dataset = widgets.Dataset;
+pub const Axis = widgets.Axis;
+pub const LegendPosition = widgets.LegendPosition;
+pub const Chart = widgets.Chart;
+pub const OverlayAnchor = widgets.OverlayAnchor;
+pub const Popup = widgets.Popup;
+pub const ConfirmOutcome = widgets.ConfirmOutcome;
+pub const ConfirmState = widgets.ConfirmState;
+pub const ConfirmDialog = widgets.ConfirmDialog;
+pub const ToastLevel = widgets.ToastLevel;
+pub const Toast = widgets.Toast;
+pub const MenuItem = widgets.MenuItem;
+pub const MenuGroup = widgets.MenuGroup;
+pub const MenuOutcome = widgets.MenuOutcome;
+pub const MenuState = widgets.MenuState;
+pub const DropdownMenu = widgets.DropdownMenu;
+pub const MenuBar = widgets.MenuBar;
+pub const ContextMenuOutcome = widgets.ContextMenuOutcome;
+pub const ContextMenu = widgets.ContextMenu;
+pub const Breadcrumbs = widgets.Breadcrumbs;
+pub const StatusSegment = widgets.StatusSegment;
+pub const StatusBar = widgets.StatusBar;
+pub const Header = widgets.Header;
+pub const ScrollViewState = widgets.ScrollViewState;
+pub const ScrollView = widgets.ScrollView;
+pub const SplitPane = widgets.SplitPane;
+pub const FocusGroup = widgets.FocusGroup;
+pub const Navbar = widgets.Navbar;
+pub const SidebarSide = widgets.SidebarSide;
+pub const SidebarItem = widgets.SidebarItem;
+pub const Sidebar = widgets.Sidebar;
+pub const Weekday = widgets.Weekday;
+pub const Month = widgets.Month;
+pub const Date = widgets.Date;
+pub const CalendarEvent = widgets.CalendarEvent;
+pub const CalendarState = widgets.CalendarState;
+pub const Calendar = widgets.Calendar;
+pub const BadgeVariant = widgets.BadgeVariant;
+pub const Badge = widgets.Badge;
+pub const Switch = widgets.Switch;
+pub const SliderState = widgets.SliderState;
+pub const Slider = widgets.Slider;
+pub const Accordion = widgets.Accordion;
+pub const effects = widgets.effects;
+pub const fx = widgets.effects;
+pub const Easing = widgets.Easing;
+pub const LoopMode = widgets.LoopMode;
+pub const Tween = widgets.Tween;
+pub const Spring = widgets.Spring;
+pub const RevealOrigin = widgets.RevealOrigin;
+pub const Transition = widgets.Transition;
+pub const ToastState = widgets.ToastState;
+pub const ToastManager = widgets.ToastManager;
+pub const Skeleton = widgets.Skeleton;
+pub const DropdownState = widgets.DropdownState;
+pub const Dropdown = widgets.Dropdown;
+pub const PieStyle = widgets.PieStyle;
+pub const PieLegendPosition = widgets.PieLegendPosition;
+pub const PieLegendLayout = widgets.PieLegendLayout;
+pub const PieSlice = widgets.PieSlice;
+pub const PieChart = widgets.PieChart;
+pub const Heatmap = widgets.Heatmap;
+pub const LogLevel = widgets.LogLevel;
+pub const LogEntry = widgets.LogEntry;
+pub const SourceFilter = widgets.SourceFilter;
+pub const LogViewerState = widgets.LogViewerState;
+pub const LogViewer = widgets.LogViewer;
+pub const DiffKind = widgets.DiffKind;
+pub const DiffLine = widgets.DiffLine;
+pub const DiffViewerState = widgets.DiffViewerState;
+pub const DiffViewer = widgets.DiffViewer;
+pub const StepStatus = widgets.StepStatus;
+pub const StepItem = widgets.StepItem;
+pub const Stepper = widgets.Stepper;
+pub const Pagination = widgets.Pagination;
+pub const KeyValueEntry = widgets.KeyValueEntry;
+pub const KeyValueList = widgets.KeyValueList;
+pub const VtCell = widgets.VtCell;
+pub const VtScreen = widgets.VtScreen;
+pub const TerminalView = widgets.TerminalView;
+pub const BigText = widgets.BigText;
+pub const Markdown = widgets.Markdown;
+pub const CommandEntry = widgets.CommandEntry;
+pub const CommandPaletteResult = widgets.CommandPaletteResult;
+pub const CommandPaletteState = widgets.CommandPaletteState;
+pub const CommandPalette = widgets.CommandPalette;
+pub const Tooltip = widgets.Tooltip;
 
 test {
-    // Run all module tests
-    std.testing.refAllDecls(@This());
+    testing.refAllDecls(@This());
+    testing.refAllDecls(style);
+    testing.refAllDecls(core);
+    testing.refAllDecls(text);
+    testing.refAllDecls(event);
+    testing.refAllDecls(backend);
+    testing.refAllDecls(terminal);
+    testing.refAllDecls(widgets);
 }

@@ -1,14 +1,10 @@
 {
-  "name": "tui.zig-docs",
-  "version": "0.0.2",
-  "description": "Documentation for TUI.zig",
   "scripts": {
     "docs:dev": "vitepress dev",
     "docs:build": "vitepress build",
     "docs:preview": "vitepress preview"
   },
   "devDependencies": {
-    "vitepress": "^1.6.4",
-    "vitepress-plugin-llms": "^1.14.0"
+    "vitepress": "^1.6.4"
   }
 }

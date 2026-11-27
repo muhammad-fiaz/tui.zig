@@ -1,15 +1,24 @@
 .{
     .name = .tui,
-    .version = "0.0.2",
-    .fingerprint = 0xca9f4dd1a731cc4c,
-    .minimum_zig_version = "0.16.0",
-    .dependencies = .{},
+    .version = "0.1.0",
+    .fingerprint = 0xca9f4dd1d5dd9ca7,
+    .minimum_zig_version = "0.17.0",
+    .dependencies = .{
+        .tint = .{
+            .url = "https://github.com/muhammad-fiaz/tint.zig/archive/refs/tags/0.0.2.tar.gz",
+            .hash = "tint-0.0.2-UOf2-TBCAwDT7f7OwJbI3YhvbKCI9fO_UPlpYb0nPLMF",
+        },
+        .zigantic = .{
+            .url = "https://github.com/muhammad-fiaz/zigantic/archive/refs/tags/0.0.5.tar.gz",
+            .hash = "zigantic-0.0.5-WxjFiPstBgCV1Rf0dBQyMXz8lP_gs4-QDIAajK0i1ZCr",
+        },
+    },
     .paths = .{
         "build.zig",
         "build.zig.zon",
         "src",
         "examples",
-        "README.md",
         "LICENSE",
+        "README.md",
     },
 }

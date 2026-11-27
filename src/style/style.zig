@@ -1,386 +1,497 @@
-//! Style definitions for TUI.zig
+//! Text and cell styling primitives backed by `tint`.
 //!
-//! Styles combine colors and text attributes for rendering cells.
+//! `Style` is plain value data with zero heap allocations. Colors default to
+//! `.inherit` and modifiers compose predictably via `patch`.
 
 const std = @import("std");
-const color = @import("color.zig");
-pub const Color = color.Color;
+const tint = @import("tint");
+const color_mod = @import("color.zig");
+const testing = std.testing;
 
-/// Text style attributes
+pub const Color = color_mod.Color;
+pub const Capability = color_mod.Capability;
+
+/// Underline decoration style.
+pub const UnderlineStyle = enum(u3) {
+    none = 0,
+    single = 1,
+    double = 2,
+    curly = 3,
+    dotted = 4,
+    dashed = 5,
+};
+
+/// Bitmask of text modifiers used for explicit removal or compact comparison.
+pub const Modifiers = packed struct(u16) {
+    bold: bool = false,
+    dim: bool = false,
+    italic: bool = false,
+    underline: bool = false,
+    blink: bool = false,
+    rapid_blink: bool = false,
+    reverse: bool = false,
+    hidden: bool = false,
+    strikethrough: bool = false,
+    overline: bool = false,
+    fraktur: bool = false,
+    frame: bool = false,
+    encircle: bool = false,
+    superscript: bool = false,
+    subscript: bool = false,
+    _padding: u1 = 0,
+
+    /// No modifiers active.
+    pub const empty: Modifiers = .{};
+
+    /// Bitwise union of `a` and `b`.
+    pub fn unionWith(a: Modifiers, b: Modifiers) Modifiers {
+        return @bitCast(@as(u16, @bitCast(a)) | @as(u16, @bitCast(b)));
+    }
+
+    /// Modifiers present in `a` and not in `b`.
+    pub fn difference(a: Modifiers, b: Modifiers) Modifiers {
+        return @bitCast(@as(u16, @bitCast(a)) & ~@as(u16, @bitCast(b)));
+    }
+
+    /// True if all modifiers in `subset` are active in `self`.
+    pub fn contains(self: Modifiers, subset: Modifiers) bool {
+        const a: u16 = @bitCast(self);
+        const b: u16 = @bitCast(subset);
+        return (a & b) == b;
+    }
+
+    /// True when no modifiers are set.
+    pub fn isEmpty(self: Modifiers) bool {
+        return @as(u16, @bitCast(self)) == 0;
+    }
+};
+
+/// Composable terminal cell and text style.
+///
+/// Unspecified colors default to `.inherit` so `Style{}` acts as an identity
+/// style during composition (`patch`).
 pub const Style = struct {
-    /// Foreground color
-    fg: Color = .default,
+    /// Foreground text color (defaults to `.inherit`).
+    foreground: Color = .inherit,
+    /// Background cell color (defaults to `.inherit`).
+    background: Color = .inherit,
+    /// Underline color for terminals supporting SGR 58 (defaults to `.inherit`).
+    underline_color: Color = .inherit,
+    /// Bold / high intensity attribute.
+    bold: bool = false,
+    /// Dim / faint attribute.
+    dim: bool = false,
+    /// Italic text attribute.
+    italic: bool = false,
+    /// Standard single underline attribute.
+    underline: bool = false,
+    /// Slow blink attribute.
+    blink: bool = false,
+    /// Rapid blink attribute.
+    rapid_blink: bool = false,
+    /// Reverse video (swaps foreground and background).
+    reverse: bool = false,
+    /// Concealed / hidden text attribute.
+    hidden: bool = false,
+    /// Crossed-out / strikethrough attribute.
+    strikethrough: bool = false,
+    /// Overline attribute.
+    overline: bool = false,
+    /// Extended underline variant (`double`, `curly`, `dotted`, `dashed`).
+    underline_style: UnderlineStyle = .none,
+    /// Optional OSC 8 hyperlink target URI (borrowed; empty/null closes link).
+    hyperlink: ?[]const u8 = null,
+    /// Modifiers explicitly cleared when patching onto another `Style`.
+    remove: Modifiers = .empty,
 
-    /// Background color
-    bg: Color = .default,
-
-    /// Text attributes
-    attrs: Attributes = .{},
-
-    /// Default style (no colors, no attributes)
-    pub const default = Style{};
-
-    /// Text attributes/modifiers
-    pub const Attributes = packed struct {
-        bold: bool = false,
-        dim: bool = false,
-        italic: bool = false,
-        underline: bool = false,
-        blink: bool = false,
-        reverse: bool = false,
-        hidden: bool = false,
-        strikethrough: bool = false,
-        double_underline: bool = false,
-        curly_underline: bool = false,
-        dotted_underline: bool = false,
-        dashed_underline: bool = false,
-        overline: bool = false,
-        _padding: u3 = 0,
+    /// Default empty style.
+    pub const default: Style = .{};
+    /// Style explicitly resetting colors and attributes to terminal defaults.
+    pub const reset: Style = .{
+        .foreground = .reset,
+        .background = .reset,
+        .underline_color = .reset,
+        .remove = .{
+            .bold = true,
+            .dim = true,
+            .italic = true,
+            .underline = true,
+            .blink = true,
+            .rapid_blink = true,
+            .reverse = true,
+            .hidden = true,
+            .strikethrough = true,
+            .overline = true,
+        },
     };
 
-    /// Set foreground color
-    pub fn setFg(self: Style, c: Color) Style {
-        var s = self;
-        s.fg = c;
-        return s;
+    /// Creates a style with only a foreground color.
+    pub fn fg(color: Color) Style {
+        return .{ .foreground = color };
     }
 
-    /// Set background color
-    pub fn setBg(self: Style, c: Color) Style {
-        var s = self;
-        s.bg = c;
-        return s;
+    /// Creates a style with only a background color.
+    pub fn bg(color: Color) Style {
+        return .{ .background = color };
     }
 
-    /// Enable bold
-    pub fn bold(self: Style) Style {
-        var s = self;
-        s.attrs.bold = true;
-        return s;
+    /// Converts from a `tint.style.Style`.
+    pub fn fromTint(s: tint.style.Style) Style {
+        return .{
+            .foreground = if (s.foreground) |c| Color.fromTint(c) else .inherit,
+            .background = if (s.background) |c| Color.fromTint(c) else .inherit,
+            .underline_color = if (s.underlineColor) |c| Color.fromTint(c) else .inherit,
+            .bold = s.bold,
+            .dim = s.dim,
+            .italic = s.italic,
+            .underline = s.underline,
+            .blink = s.blink,
+            .rapid_blink = s.rapidBlink,
+            .reverse = s.reverse,
+            .hidden = s.hidden,
+            .strikethrough = s.strikethrough,
+            .overline = s.overline,
+        };
     }
 
-    /// Enable dim
-    pub fn dim(self: Style) Style {
-        var s = self;
-        s.attrs.dim = true;
-        return s;
+    /// Returns a copy with `foreground` set to `color`.
+    pub fn withFg(self: Style, color: Color) Style {
+        var copy = self;
+        copy.foreground = color;
+        return copy;
     }
 
-    /// Enable italic
-    pub fn italic(self: Style) Style {
-        var s = self;
-        s.attrs.italic = true;
-        return s;
+    /// Returns a copy with `background` set to `color`.
+    pub fn withBg(self: Style, color: Color) Style {
+        var copy = self;
+        copy.background = color;
+        return copy;
     }
 
-    /// Enable underline
-    pub fn underline(self: Style) Style {
-        var s = self;
-        s.attrs.underline = true;
-        return s;
+    /// Returns a copy with `underline_color` set to `color`.
+    pub fn withUnderlineColor(self: Style, color: Color) Style {
+        var copy = self;
+        copy.underline_color = color;
+        return copy;
     }
 
-    /// Enable blink
-    pub fn blink(self: Style) Style {
-        var s = self;
-        s.attrs.blink = true;
-        return s;
+    /// Returns a copy carrying an OSC 8 `url` hyperlink target.
+    pub fn withLink(self: Style, url: ?[]const u8) Style {
+        var copy = self;
+        copy.hyperlink = url;
+        return copy;
     }
 
-    /// Enable reverse (swap fg/bg)
-    pub fn reverse(self: Style) Style {
-        var s = self;
-        s.attrs.reverse = true;
-        return s;
+    /// Returns a copy with bold enabled.
+    pub fn withBold(self: Style) Style {
+        var copy = self;
+        copy.bold = true;
+        copy.remove.bold = false;
+        return copy;
     }
 
-    /// Enable strikethrough
-    pub fn strikethrough(self: Style) Style {
-        var s = self;
-        s.attrs.strikethrough = true;
-        return s;
+    /// Returns a copy with dim enabled.
+    pub fn withDim(self: Style) Style {
+        var copy = self;
+        copy.dim = true;
+        copy.remove.dim = false;
+        return copy;
     }
 
-    /// Enable hidden text
-    pub fn hidden(self: Style) Style {
-        var s = self;
-        s.attrs.hidden = true;
-        return s;
+    /// Returns a copy with italic enabled.
+    pub fn withItalic(self: Style) Style {
+        var copy = self;
+        copy.italic = true;
+        copy.remove.italic = false;
+        return copy;
     }
 
-    /// Enable double underline
-    pub fn doubleUnderline(self: Style) Style {
-        var s = self;
-        s.attrs.double_underline = true;
-        s.attrs.underline = false;
-        return s;
+    /// Returns a copy with single underline enabled.
+    pub fn withUnderline(self: Style) Style {
+        var copy = self;
+        copy.underline = true;
+        copy.underline_style = .single;
+        copy.remove.underline = false;
+        return copy;
     }
 
-    /// Enable curly underline
-    pub fn curlyUnderline(self: Style) Style {
-        var s = self;
-        s.attrs.curly_underline = true;
-        s.attrs.underline = false;
-        return s;
+    /// Returns a copy with the specified `UnderlineStyle`.
+    pub fn withUnderlineStyle(self: Style, variant: UnderlineStyle) Style {
+        var copy = self;
+        copy.underline_style = variant;
+        copy.underline = variant == .single;
+        if (variant != .none) copy.remove.underline = false;
+        return copy;
     }
 
-    /// Enable overline
-    pub fn overline(self: Style) Style {
-        var s = self;
-        s.attrs.overline = true;
-        return s;
+    /// Returns a copy with reverse video enabled.
+    pub fn withReverse(self: Style) Style {
+        var copy = self;
+        copy.reverse = true;
+        copy.remove.reverse = false;
+        return copy;
     }
 
-    /// Check if two styles are equal
-    pub fn eql(self: Style, other: Style) bool {
-        return std.meta.eql(self.fg, other.fg) and
-            std.meta.eql(self.bg, other.bg) and
-            std.meta.eql(self.attrs, other.attrs);
+    /// Returns a copy with strikethrough enabled.
+    pub fn withStrikethrough(self: Style) Style {
+        var copy = self;
+        copy.strikethrough = true;
+        copy.remove.strikethrough = false;
+        return copy;
     }
 
-    /// Merge two styles (other overrides self for non-default values)
-    pub fn merge(self: Style, other: Style) Style {
-        var result = self;
+    /// Returns the effective `UnderlineStyle` normalized across `underline` and `underline_style`.
+    pub fn effectiveUnderline(self: Style) UnderlineStyle {
+        if (self.underline_style != .none) return self.underline_style;
+        return if (self.underline) .single else .none;
+    }
 
-        if (!other.fg.isDefault()) {
-            result.fg = other.fg;
+    /// Packs the active modifier booleans into a `Modifiers` bitmask.
+    pub fn activeModifiers(self: Style) Modifiers {
+        return .{
+            .bold = self.bold,
+            .dim = self.dim,
+            .italic = self.italic,
+            .underline = self.effectiveUnderline() != .none,
+            .blink = self.blink,
+            .rapid_blink = self.rapid_blink,
+            .reverse = self.reverse,
+            .hidden = self.hidden,
+            .strikethrough = self.strikethrough,
+            .overline = self.overline,
+        };
+    }
+
+    /// Applies `other` on top of `self`. Non-inherit colors replace; `other`'s
+    /// active modifiers are added while `other.remove` modifiers are cleared.
+    pub fn patch(self: Style, other: Style) Style {
+        var out = self;
+        if (!other.foreground.isInherit()) out.foreground = other.foreground;
+        if (!other.background.isInherit()) out.background = other.background;
+        if (!other.underline_color.isInherit()) out.underline_color = other.underline_color;
+
+        if (other.remove.bold) out.bold = false;
+        if (other.remove.dim) out.dim = false;
+        if (other.remove.italic) out.italic = false;
+        if (other.remove.underline) {
+            out.underline = false;
+            out.underline_style = .none;
         }
-        if (!other.bg.isDefault()) {
-            result.bg = other.bg;
+        if (other.remove.blink) out.blink = false;
+        if (other.remove.rapid_blink) out.rapid_blink = false;
+        if (other.remove.reverse) out.reverse = false;
+        if (other.remove.hidden) out.hidden = false;
+        if (other.remove.strikethrough) out.strikethrough = false;
+        if (other.remove.overline) out.overline = false;
+
+        if (other.bold) out.bold = true;
+        if (other.dim) out.dim = true;
+        if (other.italic) out.italic = true;
+        if (other.underline_style != .none) {
+            out.underline_style = other.underline_style;
+            out.underline = other.underline_style == .single;
+        } else if (other.underline) {
+            out.underline = true;
+            out.underline_style = .single;
         }
+        if (other.blink) out.blink = true;
+        if (other.rapid_blink) out.rapid_blink = true;
+        if (other.reverse) out.reverse = true;
+        if (other.hidden) out.hidden = true;
+        if (other.strikethrough) out.strikethrough = true;
+        if (other.overline) out.overline = true;
+        if (other.hyperlink) |hl| out.hyperlink = hl;
 
-        // Merge attributes (other takes precedence for any set attribute)
-        const self_attrs = @as(u16, @bitCast(self.attrs));
-        const other_attrs = @as(u16, @bitCast(other.attrs));
-        result.attrs = @bitCast(self_attrs | other_attrs);
-
-        return result;
+        out.remove = self.remove.difference(other.activeModifiers()).unionWith(other.remove);
+        return out;
     }
 
-    /// Write the style as ANSI escape sequences
-    pub fn toAnsi(self: Style, writer: anytype) !void {
-        // Reset first
-        try writer.writeAll("\x1b[0m");
-
-        // Foreground
-        try self.fg.toFgAnsi(writer);
-
-        // Background
-        try self.bg.toBgAnsi(writer);
-
-        // Attributes
-        if (self.attrs.bold) try writer.writeAll("\x1b[1m");
-        if (self.attrs.dim) try writer.writeAll("\x1b[2m");
-        if (self.attrs.italic) try writer.writeAll("\x1b[3m");
-        if (self.attrs.underline) try writer.writeAll("\x1b[4m");
-        if (self.attrs.blink) try writer.writeAll("\x1b[5m");
-        if (self.attrs.reverse) try writer.writeAll("\x1b[7m");
-        if (self.attrs.hidden) try writer.writeAll("\x1b[8m");
-        if (self.attrs.strikethrough) try writer.writeAll("\x1b[9m");
-        if (self.attrs.double_underline) try writer.writeAll("\x1b[21m");
-        if (self.attrs.curly_underline) try writer.writeAll("\x1b[4:3m");
-        if (self.attrs.dotted_underline) try writer.writeAll("\x1b[4:4m");
-        if (self.attrs.dashed_underline) try writer.writeAll("\x1b[4:5m");
-        if (self.attrs.overline) try writer.writeAll("\x1b[53m");
+    /// Converts to a `tint.style.Style`, optionally downgrading colors for `capability`.
+    pub fn toTint(self: Style, capability: Capability) tint.style.Style {
+        return .{
+            .foreground = self.foreground.downgrade(capability).toTint(),
+            .background = self.background.downgrade(capability).toTint(),
+            .underlineColor = self.underline_color.downgrade(capability).toTint(),
+            .bold = self.bold,
+            .dim = self.dim,
+            .italic = self.italic,
+            .underline = self.effectiveUnderline() != .none,
+            .blink = self.blink,
+            .rapidBlink = self.rapid_blink,
+            .reverse = self.reverse,
+            .hidden = self.hidden,
+            .strikethrough = self.strikethrough,
+            .overline = self.overline,
+        };
     }
 
-    /// Write only the differences from another style
-    pub fn toDiffAnsi(self: Style, prev: Style, writer: anytype) !void {
-        // Check if we need a full reset
-        const need_reset = (prev.attrs.bold and !self.attrs.bold) or
-            (prev.attrs.dim and !self.attrs.dim) or
-            (prev.attrs.italic and !self.attrs.italic) or
-            (prev.attrs.underline and !self.attrs.underline) or
-            (prev.attrs.blink and !self.attrs.blink) or
-            (prev.attrs.reverse and !self.attrs.reverse) or
-            (prev.attrs.hidden and !self.attrs.hidden) or
-            (prev.attrs.strikethrough and !self.attrs.strikethrough);
+    /// Returns a normalized copy with colors downgraded to `capability`.
+    pub fn downgrade(self: Style, capability: Capability) Style {
+        var out = self;
+        out.foreground = self.foreground.downgrade(capability);
+        out.background = self.background.downgrade(capability);
+        out.underline_color = self.underline_color.downgrade(capability);
+        return out;
+    }
 
-        if (need_reset) {
-            try self.toAnsi(writer);
+    /// Blends foreground and background colors smoothly toward `other` (`ratio` in `0.0..1.0`).
+    pub fn mix(self: Style, other: Style, ratio: f64) Style {
+        var out = self;
+        out.foreground = self.foreground.mix(other.foreground, ratio);
+        out.background = self.background.mix(other.background, ratio);
+        return out;
+    }
+
+    /// Equality check ignoring `remove` mask when comparing resolved cell styles.
+    pub fn eql(a: Style, b: Style) bool {
+        return a.foreground.eql(b.foreground) and
+            a.background.eql(b.background) and
+            a.underline_color.eql(b.underline_color) and
+            a.bold == b.bold and
+            a.dim == b.dim and
+            a.italic == b.italic and
+            a.effectiveUnderline() == b.effectiveUnderline() and
+            a.blink == b.blink and
+            a.rapid_blink == b.rapid_blink and
+            a.reverse == b.reverse and
+            a.hidden == b.hidden and
+            a.strikethrough == b.strikethrough and
+            a.overline == b.overline;
+    }
+
+    /// Emits the minimal ANSI/SGR escape sequences needed to transition terminal
+    /// state from `prev` to `next` under `capability`.
+    pub fn writeAnsiDiff(
+        prev: Style,
+        next: Style,
+        capability: Capability,
+        writer: *std.Io.Writer,
+    ) std.Io.Writer.Error!void {
+        const p_fg = resolvedColor(prev.foreground, capability);
+        const n_fg = resolvedColor(next.foreground, capability);
+        const p_bg = resolvedColor(prev.background, capability);
+        const n_bg = resolvedColor(next.background, capability);
+        const p_ul = resolvedColor(prev.underline_color, capability);
+        const n_ul = resolvedColor(next.underline_color, capability);
+
+        const fg_changed = !p_fg.eql(n_fg);
+        const bg_changed = !p_bg.eql(n_bg);
+        const ul_changed = !p_ul.eql(n_ul);
+
+        const p_mods = prev.activeModifiers();
+        const n_mods = next.activeModifiers();
+        const p_u = prev.effectiveUnderline();
+        const n_u = next.effectiveUnderline();
+
+        if (!fg_changed and !bg_changed and !ul_changed and
+            @as(u16, @bitCast(p_mods)) == @as(u16, @bitCast(n_mods)) and p_u == n_u)
+        {
             return;
         }
 
-        // Apply only differences
-        if (!std.meta.eql(self.fg, prev.fg)) {
-            try self.fg.toFgAnsi(writer);
+        // Handle attribute resets first because SGR 22/23/25 clear paired attributes.
+        const reset_intensity = (p_mods.bold and !n_mods.bold) or (p_mods.dim and !n_mods.dim);
+        const reset_blink = (p_mods.blink and !n_mods.blink) or (p_mods.rapid_blink and !n_mods.rapid_blink);
+
+        if (reset_intensity) try writer.writeAll(tint.ansi.reset.bold);
+        if (p_mods.italic and !n_mods.italic) try writer.writeAll(tint.ansi.reset.italic);
+        if (p_u != .none and n_u == .none) try writer.writeAll(tint.ansi.reset.underline);
+        if (reset_blink) try writer.writeAll(tint.ansi.reset.blink);
+        if (p_mods.reverse and !n_mods.reverse) try writer.writeAll(tint.ansi.reset.reverse);
+        if (p_mods.hidden and !n_mods.hidden) try writer.writeAll(tint.ansi.reset.hidden);
+        if (p_mods.strikethrough and !n_mods.strikethrough) try writer.writeAll(tint.ansi.reset.strikethrough);
+        if (p_mods.overline and !n_mods.overline) try writer.writeAll(tint.ansi.reset.overline);
+
+        if (fg_changed) {
+            if (n_fg.sequence(.foreground, capability)) |seq| {
+                try writer.writeAll(seq.slice());
+            } else {
+                try writer.writeAll(tint.ansi.reset.foreground);
+            }
+        }
+        if (bg_changed) {
+            if (n_bg.sequence(.background, capability)) |seq| {
+                try writer.writeAll(seq.slice());
+            } else {
+                try writer.writeAll(tint.ansi.reset.background);
+            }
+        }
+        if (ul_changed) {
+            if (n_ul.sequence(.underline, capability)) |seq| {
+                try writer.writeAll(seq.slice());
+            } else {
+                try writer.writeAll(tint.ansi.reset.underlineColor);
+            }
         }
 
-        if (!std.meta.eql(self.bg, prev.bg)) {
-            try self.bg.toBgAnsi(writer);
+        if (n_mods.bold and (!p_mods.bold or reset_intensity)) try writer.writeAll("\x1b[1m");
+        if (n_mods.dim and (!p_mods.dim or reset_intensity)) try writer.writeAll("\x1b[2m");
+        if (n_mods.italic and !p_mods.italic) try writer.writeAll("\x1b[3m");
+        if (n_u != .none and n_u != p_u) {
+            const code = switch (n_u) {
+                .none => unreachable,
+                .single => "\x1b[4m",
+                .double => "\x1b[4:2m",
+                .curly => "\x1b[4:3m",
+                .dotted => "\x1b[4:4m",
+                .dashed => "\x1b[4:5m",
+            };
+            try writer.writeAll(code);
         }
-
-        if (self.attrs.bold and !prev.attrs.bold) try writer.writeAll("\x1b[1m");
-        if (self.attrs.dim and !prev.attrs.dim) try writer.writeAll("\x1b[2m");
-        if (self.attrs.italic and !prev.attrs.italic) try writer.writeAll("\x1b[3m");
-        if (self.attrs.underline and !prev.attrs.underline) try writer.writeAll("\x1b[4m");
-        if (self.attrs.blink and !prev.attrs.blink) try writer.writeAll("\x1b[5m");
-        if (self.attrs.reverse and !prev.attrs.reverse) try writer.writeAll("\x1b[7m");
-        if (self.attrs.hidden and !prev.attrs.hidden) try writer.writeAll("\x1b[8m");
-        if (self.attrs.strikethrough and !prev.attrs.strikethrough) try writer.writeAll("\x1b[9m");
+        if (n_mods.blink and (!p_mods.blink or reset_blink)) try writer.writeAll("\x1b[5m");
+        if (n_mods.rapid_blink and (!p_mods.rapid_blink or reset_blink)) try writer.writeAll("\x1b[6m");
+        if (n_mods.reverse and !p_mods.reverse) try writer.writeAll("\x1b[7m");
+        if (n_mods.hidden and !p_mods.hidden) try writer.writeAll("\x1b[8m");
+        if (n_mods.strikethrough and !p_mods.strikethrough) try writer.writeAll("\x1b[9m");
+        if (n_mods.overline and !p_mods.overline) try writer.writeAll("\x1b[53m");
     }
 };
 
-/// Border styles for boxes and containers
-pub const BorderStyle = enum {
-    none,
-    single,
-    double,
-    rounded,
-    thick,
-    dashed,
-    dotted,
-    ascii,
-
-    /// Get the border characters for a style
-    pub fn chars(self: BorderStyle) BorderChars {
-        return switch (self) {
-            .none => .{
-                .top_left = ' ',
-                .top_right = ' ',
-                .bottom_left = ' ',
-                .bottom_right = ' ',
-                .horizontal = ' ',
-                .vertical = ' ',
-            },
-            .single => .{
-                .top_left = '┌',
-                .top_right = '┐',
-                .bottom_left = '└',
-                .bottom_right = '┘',
-                .horizontal = '─',
-                .vertical = '│',
-            },
-            .double => .{
-                .top_left = '╔',
-                .top_right = '╗',
-                .bottom_left = '╚',
-                .bottom_right = '╝',
-                .horizontal = '═',
-                .vertical = '║',
-            },
-            .rounded => .{
-                .top_left = '╭',
-                .top_right = '╮',
-                .bottom_left = '╰',
-                .bottom_right = '╯',
-                .horizontal = '─',
-                .vertical = '│',
-            },
-            .thick => .{
-                .top_left = '┏',
-                .top_right = '┓',
-                .bottom_left = '┗',
-                .bottom_right = '┛',
-                .horizontal = '━',
-                .vertical = '┃',
-            },
-            .dashed => .{
-                .top_left = '┌',
-                .top_right = '┐',
-                .bottom_left = '└',
-                .bottom_right = '┘',
-                .horizontal = '╌',
-                .vertical = '╎',
-            },
-            .dotted => .{
-                .top_left = '┌',
-                .top_right = '┐',
-                .bottom_left = '└',
-                .bottom_right = '┘',
-                .horizontal = '┄',
-                .vertical = '┆',
-            },
-            .ascii => .{
-                .top_left = '+',
-                .top_right = '+',
-                .bottom_left = '+',
-                .bottom_right = '+',
-                .horizontal = '-',
-                .vertical = '|',
-            },
-        };
-    }
-};
-
-/// Characters used for drawing borders
-pub const BorderChars = struct {
-    top_left: u21,
-    top_right: u21,
-    bottom_left: u21,
-    bottom_right: u21,
-    horizontal: u21,
-    vertical: u21,
-};
-
-/// Styled border configuration
-pub const Border = struct {
-    style: BorderStyle = .single,
-    color: Color = .default,
-    title: ?[]const u8 = null,
-    title_alignment: Alignment = .left,
-
-    pub const none = Border{ .style = .none };
-    pub const single = Border{ .style = .single };
-    pub const double = Border{ .style = .double };
-    pub const rounded = Border{ .style = .rounded };
-    pub const thick = Border{ .style = .thick };
-};
-
-/// Text alignment
-pub const Alignment = enum {
-    left,
-    center,
-    right,
-
-    /// Calculate the starting position for aligned text
-    pub fn calculate(self: Alignment, text_width: usize, available_width: usize) usize {
-        return switch (self) {
-            .left => 0,
-            .center => if (available_width > text_width) (available_width - text_width) / 2 else 0,
-            .right => if (available_width > text_width) available_width - text_width else 0,
-        };
-    }
-};
-
-/// Vertical alignment
-pub const VerticalAlignment = enum {
-    top,
-    middle,
-    bottom,
-
-    pub fn calculate(self: VerticalAlignment, content_height: usize, available_height: usize) usize {
-        return switch (self) {
-            .top => 0,
-            .middle => if (available_height > content_height) (available_height - content_height) / 2 else 0,
-            .bottom => if (available_height > content_height) available_height - content_height else 0,
-        };
-    }
-};
-
-test "style chaining" {
-    const s = Style.default
-        .setFg(Color.hex(0xFF0000))
-        .setBg(Color{ .basic = .blue })
-        .bold()
-        .italic();
-
-    try std.testing.expect(s.attrs.bold);
-    try std.testing.expect(s.attrs.italic);
-    try std.testing.expect(!s.attrs.underline);
+fn resolvedColor(c: Color, capability: Capability) Color {
+    if (c.isInherit() or c.isReset()) return .reset;
+    return c.downgrade(capability);
 }
 
-test "style equality" {
-    const s1 = Style.default.bold().italic();
-    const s2 = Style.default.bold().italic();
-    const s3 = Style.default.bold();
+test "style patch composes colors and modifiers" {
+    const base = Style{ .foreground = .white, .background = .blue, .bold = true };
+    const overlay = Style{ .foreground = .yellow, .italic = true, .remove = .{ .bold = true } };
+    const merged = base.patch(overlay);
 
-    try std.testing.expect(s1.eql(s2));
-    try std.testing.expect(!s1.eql(s3));
+    try testing.expectEqual(Color.yellow, merged.foreground);
+    try testing.expectEqual(Color.blue, merged.background);
+    try testing.expect(!merged.bold);
+    try testing.expect(merged.italic);
 }
 
-test "alignment calculation" {
-    try std.testing.expectEqual(@as(usize, 0), Alignment.left.calculate(5, 20));
-    try std.testing.expectEqual(@as(usize, 7), Alignment.center.calculate(6, 20));
-    try std.testing.expectEqual(@as(usize, 15), Alignment.right.calculate(5, 20));
+test "style toTint emits expected SGR" {
+    const s = Style.fg(.red).withBg(.black).withBold();
+    const t = s.toTint(.trueColor);
+    try testing.expectEqualStrings("\x1b[31;40;1m", t.toAnsi().slice());
+}
+
+test "writeAnsiDiff emits minimal transitions" {
+    var buf: [256]u8 = undefined;
+    var writer = std.Io.Writer.fixed(&buf);
+
+    const a = Style{ .foreground = .red, .bold = true, .dim = true };
+    const b = Style{ .foreground = .red, .bold = true };
+    try Style.writeAnsiDiff(a, b, .trueColor, &writer);
+    // Bold and dim share SGR 22 reset, so bold must be re-applied without re-emitting red.
+    try testing.expectEqualStrings("\x1b[22m\x1b[1m", writer.buffered());
+
+    var writer2 = std.Io.Writer.fixed(&buf);
+    try Style.writeAnsiDiff(b, b, .trueColor, &writer2);
+    try testing.expectEqual(@as(usize, 0), writer2.buffered().len);
+
+    // Extended underline styles + underline color + reverse highlight transition cleanly.
+    const ul_a = Style.fg(.cyan).withUnderlineStyle(.curly).withUnderlineColor(.yellow).withReverse();
+    const ul_b = Style.fg(.cyan).withUnderlineStyle(.double);
+    var writer3 = std.Io.Writer.fixed(&buf);
+    try Style.writeAnsiDiff(.default, ul_a, .trueColor, &writer3);
+    try testing.expect(std.mem.indexOf(u8, writer3.buffered(), "\x1b[4:3m") != null);
+    try testing.expect(std.mem.indexOf(u8, writer3.buffered(), "\x1b[7m") != null);
+    var writer4 = std.Io.Writer.fixed(&buf);
+    try Style.writeAnsiDiff(ul_a, ul_b, .trueColor, &writer4);
+    try testing.expect(std.mem.indexOf(u8, writer4.buffered(), "\x1b[27m") != null);
+    try testing.expect(std.mem.indexOf(u8, writer4.buffered(), "\x1b[4:2m") != null);
 }

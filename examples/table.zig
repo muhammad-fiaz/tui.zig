@@ -1,63 +1,87 @@
 const std = @import("std");
 const tui = @import("tui");
 
-const Row = struct { id: u32, name: []const u8, value: u32 };
-
-fn render_cell(row: Row, col: usize, buf: []u8) []const u8 {
-    const written = switch (col) {
-        0 => std.fmt.bufPrint(buf, "{d}", .{row.id}) catch 0,
-        1 => std.fmt.bufPrint(buf, "{s}", .{row.name}) catch 0,
-        2 => std.fmt.bufPrint(buf, "{d}", .{row.value}) catch 0,
-        else => 0,
-    };
-    return buf[0..written];
-}
-
-pub const TableApp = struct {
-    tbl: tui.Table(Row) = undefined,
-
-    pub fn init() TableApp {
-        const cols = &.{
-            tui.Column{ .header = "ID" },
-            tui.Column{ .header = "Name" },
-            tui.Column{ .header = "Value" },
-        };
-
-        const rows = &.{
-            Row{ .id = 1, .name = "Alice", .value = 10 },
-            Row{ .id = 2, .name = "Bob", .value = 20 },
-            Row{ .id = 3, .name = "Carol", .value = 30 },
-        };
-
-        return TableApp{ .tbl = tui.Table(Row).init(cols, rows, &render_cell) };
-    }
-
-    pub fn render(self: *TableApp, ctx: *tui.RenderContext) void {
-        // Ensure bounds are set for the table
-        self.tbl.base.bounds = ctx.bounds;
-        self.tbl.render(ctx);
-    }
-
-    pub fn handleEvent(self: *TableApp, event: tui.Event) tui.EventResult {
-        if (event == .key) {
-            const k = event.key;
-            if (k.key == .up) {
-                if (self.tbl.selected_row > 0) self.tbl.selectRow(self.tbl.selected_row - 1);
-                return .needs_redraw;
-            } else if (k.key == .down) {
-                if (self.tbl.selected_row + 1 < self.tbl.rows.len) self.tbl.selectRow(self.tbl.selected_row + 1);
-                return .needs_redraw;
-            }
-        }
-        return .ignored;
-    }
+const State = struct {
+    table: tui.TableState = .{ .selected = 0 },
+    table_rect: tui.Rect = tui.Rect.zero,
 };
 
-pub fn main() !void {
-    var app = try tui.App.init(.{});
+const table_rows = [_]tui.TableRow{
+    tui.TableRow.fromStrings(&.{ "nginx-gateway", "Running", "1.8%", "42 MB", "99.99%" }),
+    tui.TableRow.fromStrings(&.{ "postgres-primary", "Running", "12.4%", "512 MB", "99.95%" }),
+    tui.TableRow.fromStrings(&.{ "redis-cache", "Running", "0.4%", "28 MB", "100.0%" }),
+    tui.TableRow.fromStrings(&.{ "worker-queue", "Degraded", "48.2%", "290 MB", "96.40%" }),
+    tui.TableRow.fromStrings(&.{ "metrics-sink", "Running", "3.1%", "110 MB", "99.90%" }),
+    tui.TableRow.fromStrings(&.{ "tls-terminator", "Stopped", "0.0%", "0 MB", "98.10%" }),
+};
+
+const widths = [_]tui.Constraint{
+    .{ .length = 18 },
+    .{ .length = 11 },
+    .{ .length = 8 },
+    .{ .length = 10 },
+    .{ .fill = 1 },
+};
+
+const cluster_table = tui.Table{
+    .header = tui.TableRow.fromStrings(&.{ "Service", "Status", "CPU", "Memory", "Uptime" }),
+    .footer = tui.TableRow.fromStrings(&.{ "Total: 6", "4 Healthy", "65.9%", "982 MB", "avg 98.9%" }),
+    .rows = &table_rows,
+    .widths = &widths,
+    .block = .{ .title = "Cluster Services", .focused = true },
+    .show_header_separator = true,
+    .empty_message = "No matching services",
+    .striped_style = .{ .dim = true },
+    .column_highlight_style = .{ .underline = true },
+};
+
+fn onEvent(state: *State, event: tui.Event, app: *tui.App) !bool {
+    if (event.isEscape() or event.isCtrlC() or event.isChar('q')) {
+        app.quit();
+        return false;
+    }
+    _ = cluster_table.handleEvent(&state.table, event, state.table_rect);
+    return true;
+}
+
+fn render(state: *State, ui: *tui.Ui) !void {
+    ui.fillThemeSurface();
+    const layout = ui.rows(3, .{ .{ .length = 1 }, .{ .fill = 1 }, .{ .length = 1 } }, .{});
+    var hdr = layout[0];
+    hdr.header(.{ .title = "Table Widget", .right = "Up/Down Row  Left/Right Col" }, hdr.area);
+
+    var body = layout[1].margin(tui.Margin.uniform(1));
+    state.table_rect = body.area;
+    try body.table(cluster_table, &state.table, body.area);
+
+    var ft = layout[2];
+    ft.statusBar(.{
+        .left = &.{.{ .text = "TABLE", .badge = true }},
+        .right = &.{.{ .text = "Arrows / Click Navigate  q Quit" }},
+    }, ft.area);
+}
+
+pub fn main(init: std.process.Init) !void {
+    const alloc = init.gpa;
+    const headless = tui.hasArg(init.minimal.args, alloc, "--headless");
+
+    var app = try tui.init(alloc, .{
+        .io = init.io,
+        .backend = if (headless) .{ .memory = .{ .width = 80, .height = 20 } } else .auto,
+        .settings = .{ .mouse = true },
+    });
     defer app.deinit();
 
-    var root = TableApp.init();
-    try app.setRoot(&root);
-    try app.run();
+    var state = State{};
+    if (headless) {
+        try app.draw(&state, render);
+        _ = try onEvent(&state, .{ .key = .{ .code = .down } }, &app);
+        try app.draw(&state, render);
+        const snap = try app.snapshot();
+        std.debug.assert(std.mem.indexOf(u8, snap, "postgres-primary") != null);
+        return;
+    }
+
+    try app.enter();
+    try app.run(&state, .{ .onEvent = onEvent, .render = render });
 }

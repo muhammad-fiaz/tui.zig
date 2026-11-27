@@ -1,46 +1,56 @@
 name: Help Wanted
-description: Ask for help with using TUI.zig
+description: Ask a question or request implementation guidance
 title: "[Help]: "
-labels: ["question", "help wanted"]
+labels: ["question", "triage"]
 body:
   - type: markdown
     attributes:
       value: |
-        Need help with TUI.zig? Describe what you're trying to achieve and we'll do our best to assist.
+        Need help? Please check docs first: https://muhammad-fiaz.github.io/tui.zig/
 
   - type: textarea
     id: question
     attributes:
-      label: What are you trying to do?
-      description: Describe your goal or what you're building.
-      placeholder: "I'm trying to build a..."
+      label: Question
+      description: What do you need help with?
+      placeholder: "How do I build a custom stateful widget or configure responsive layouts?"
     validations:
       required: true
 
   - type: textarea
-    id: code
+    id: context
     attributes:
-      label: What have you tried?
-      description: Show the code you've written so far.
+      label: Context / What You Tried
+      description: Include code snippets and attempts so far.
       render: zig
-      placeholder: Your code so far...
-    validations:
-      required: false
 
-  - type: textarea
-    id: error
+  - type: input
+    id: zig-version
     attributes:
-      label: Error or unexpected behavior
-      description: If applicable, include any error messages or unexpected output.
-      placeholder: Error messages or unexpected behavior...
+      label: Zig Version
+      description: What version of Zig are you using? (`zig version`, minimum 0.17.0+)
+      placeholder: 0.17.0
     validations:
-      required: false
+      required: true
 
-  - type: textarea
-    id: additional
+  - type: input
+    id: tui-version
     attributes:
-      label: Additional Context
-      description: Any other relevant information (Zig version, platform, etc.).
-      placeholder: Zig version, platform, screenshots...
+      label: tui.zig Version
+      description: What version of tui.zig are you using? (e.g. 0.1.0, main branch commit)
+      placeholder: 0.1.0
     validations:
-      required: false
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - Windows
+        - Linux
+        - macOS
+        - BSD
+        - Other
+    validations:
+      required: true

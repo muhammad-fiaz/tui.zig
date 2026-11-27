@@ -1,89 +1,68 @@
 name: Feature Request
-description: Suggest a new feature or enhancement for TUI.zig
-title: "[Feature]: "
-labels: ["enhancement"]
+description: Suggest an idea or enhancement for tui.zig
+title: "[Feat]: "
+labels: ["enhancement", "triage"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for suggesting a feature! Please describe what you'd like to see added.
+        Thanks for helping improve tui.zig!
+
+        Please describe your use case and why this feature matters.
+        The more detail you provide, the easier it is to evaluate and implement.
 
   - type: textarea
     id: problem
     attributes:
-      label: Problem Statement
-      description: Is this related to a problem? Describe what you're trying to do.
-      placeholder: "I'm always frustrated when..."
+      label: Problem / Use Case
+      description: A clear and concise description of the feature or widget you want.
+      placeholder: "I would like support for widget X... / When building UI Y, I need Z..."
     validations:
-      required: false
+      required: true
 
   - type: textarea
     id: solution
     attributes:
       label: Proposed Solution
       description: Describe the solution you'd like.
-      placeholder: Describe the feature you want...
+      placeholder: "Add a new widget/layout/backend capability that allows..."
     validations:
       required: true
+
+  - type: textarea
+    id: api-design
+    attributes:
+      label: Suggested API (Optional)
+      description: If possible, share a rough API sketch in Zig.
+      render: zig
+    validations:
+      required: false
 
   - type: textarea
     id: alternatives
     attributes:
       label: Alternatives Considered
-      description: Describe any alternative solutions or features you've considered.
-      placeholder: Other approaches you've thought about...
+      description: Describe any alternative solutions or custom widget patterns you've considered.
     validations:
       required: false
 
   - type: dropdown
-    id: widget_type
+    id: breaking-change
     attributes:
-      label: Related Widget
-      description: Is this related to a specific widget?
+      label: Does this require a breaking API change?
       options:
-        - General / Core
-        - Text
-        - Button
-        - InputField
-        - TextArea
-        - Checkbox
-        - Radio
-        - Switch
-        - Slider
-        - ProgressBar
-        - Spinner
-        - ListView
-        - Table
-        - Tabs
-        - Modal
-        - Accordion
-        - Alert
-        - Badge
-        - Breadcrumb
-        - Card
-        - Grid
-        - Image
-        - Menu
-        - Navbar
-        - Pagination
-        - ScrollView
-        - Separator
-        - Sidebar
-        - Skeleton
-        - SplitView
-        - Statusbar
-        - Toast
-        - Tooltip
-        - Tree
-        - Other
+        - "No"
+        - "Yes"
+        - "Not sure"
     validations:
-      required: false
+      required: true
 
-  - type: textarea
-    id: additional
+  - type: checkboxes
+    id: checklist
     attributes:
-      label: Additional Context
-      description: Add any other context, mockups, or examples about the feature request.
-      placeholder: Any additional information...
-    validations:
-      required: false
+      label: Checklist
+      options:
+        - label: I searched existing issues and discussions before creating this request.
+          required: true
+        - label: I checked the latest `main` branch for existing implementation.
+          required: false

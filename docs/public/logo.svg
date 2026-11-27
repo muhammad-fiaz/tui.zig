@@ -1,34 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 220" width="800" height="220">
   <defs>
-    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#f7a41d;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#ffc107;stop-opacity:1" />
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
     </linearGradient>
-    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#2d3748;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#1a202c;stop-opacity:1" />
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f7a41d"/>
+      <stop offset="100%" stop-color="#38bdf8"/>
     </linearGradient>
   </defs>
-  
-  <!-- Background -->
-  <rect x="20" y="20" width="160" height="160" rx="20" fill="url(#grad2)"/>
-  
-  <!-- Terminal frame -->
-  <rect x="30" y="45" width="140" height="115" rx="5" fill="#1a1a2e" stroke="url(#grad1)" stroke-width="2"/>
-  
-  <!-- Title bar dots -->
-  <circle cx="45" cy="35" r="5" fill="#ff6b6b"/>
-  <circle cx="60" cy="35" r="5" fill="#ffd93d"/>
-  <circle cx="75" cy="35" r="5" fill="#6bcb77"/>
-  
-  <!-- TUI text -->
-  <text x="100" y="100" font-family="monospace" font-size="32" font-weight="bold" fill="url(#grad1)" text-anchor="middle">TUI</text>
-  
-  <!-- .zig text -->
-  <text x="100" y="130" font-family="monospace" font-size="18" fill="#a0aec0" text-anchor="middle">.zig</text>
-  
-  <!-- Cursor blink -->
-  <rect x="135" y="115" width="10" height="20" fill="url(#grad1)">
-    <animate attributeName="opacity" values="1;0;1" dur="1s" repeatCount="indefinite"/>
-  </rect>
+  <rect x="8" y="8" width="784" height="204" rx="22" fill="url(#bg)" stroke="url(#accent)" stroke-width="4"/>
+  <circle cx="44" cy="40" r="7" fill="#ef4444"/>
+  <circle cx="68" cy="40" r="7" fill="#f59e0b"/>
+  <circle cx="92" cy="40" r="7" fill="#22c55e"/>
+  <rect x="34" y="68" width="108" height="108" rx="16" fill="#020617" stroke="url(#accent)" stroke-width="3"/>
+  <path d="M58 100 L82 122 L58 144" fill="none" stroke="#f7a41d" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="92" y="138" width="32" height="8" rx="4" fill="#38bdf8"/>
+  <text x="172" y="128" fill="url(#accent)" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="78" font-weight="800">tui.zig</text>
+  <text x="176" y="170" fill="#94a3b8" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="22" font-weight="500">Native Terminal User Interfaces for Zig 0.17.0+</text>
 </svg>

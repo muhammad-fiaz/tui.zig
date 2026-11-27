@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <rect width="1200" height="630" fill="#0f172a"/>
+  <rect x="48" y="48" width="1104" height="534" rx="24" fill="#111827" stroke="#f7a41d" stroke-width="4"/>
+  <text x="108" y="240" fill="#f7a41d" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="96" font-weight="700">tui.zig</text>
+  <text x="108" y="325" fill="#e2e8f0" font-family="system-ui, -apple-system, sans-serif" font-size="38">Native Terminal User Interface Library for Zig 0.17.0+</text>
+  <text x="108" y="410" fill="#94a3b8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="26">Zero C dependencies · Explicit allocators · Diff rendering · 30+ Widgets</text>
+</svg>

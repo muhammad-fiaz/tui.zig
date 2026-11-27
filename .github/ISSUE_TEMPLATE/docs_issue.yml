@@ -1,59 +1,21 @@
 name: Documentation Issue
-description: Report an issue with documentation
+description: Report errors or missing information in the documentation
 title: "[Docs]: "
-labels: ["documentation"]
+labels: ["documentation", "triage"]
 body:
   - type: markdown
     attributes:
       value: |
-        Found an issue with the documentation? Let us know so we can improve it.
+        Thanks for helping improve the docs.
 
-  - type: dropdown
-    id: doc_type
-    attributes:
-      label: Documentation Type
-      description: What type of documentation is affected?
-      options:
-        - Guide (Getting Started, Tutorial)
-        - API Reference
-        - Widget Documentation
-        - Examples
-        - README
-        - Other
-    validations:
-      required: true
-
-  - type: input
-    id: page
-    attributes:
-      label: Page URL or File
-      description: Which page or file has the issue?
-      placeholder: "e.g., /guide/getting-started or src/widgets/button.zig"
-    validations:
-      required: false
-
-  - type: dropdown
-    id: issue_type
-    attributes:
-      label: Issue Type
-      description: What kind of documentation issue is this?
-      options:
-        - Incorrect information
-        - Missing information
-        - Outdated content
-        - Broken link
-        - Typo or grammar
-        - Code example doesn't work
-        - Confusing explanation
-    validations:
-      required: true
+        Docs are available at: https://muhammad-fiaz.github.io/tui.zig/
 
   - type: textarea
-    id: description
+    id: problem
     attributes:
-      label: Description
-      description: Describe the documentation issue.
-      placeholder: Describe what's wrong or missing...
+      label: The Problem
+      description: What is wrong or missing in the documentation?
+      placeholder: "The example for custom widgets / layout / Tailwind palette is outdated or unclear..."
     validations:
       required: true
 
@@ -61,7 +23,33 @@ body:
     id: suggestion
     attributes:
       label: Suggested Fix
-      description: If you know how to fix it, describe the correction.
-      placeholder: What should the documentation say instead?
+      description: How should we fix it?
     validations:
       required: false
+
+  - type: input
+    id: page-url
+    attributes:
+      label: Page URL
+      description: Link to the page with the issue.
+      placeholder: https://muhammad-fiaz.github.io/tui.zig/guides/getting-started
+
+  - type: input
+    id: section
+    attributes:
+      label: Section / Heading
+      description: Which heading or section is affected?
+      placeholder: "Guides > Custom Widgets > Stateful Custom Components"
+
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impact
+      description: How severe is this docs problem?
+      options:
+        - Typo / minor wording
+        - Missing detail
+        - Incorrect code example
+        - Incorrect technical guidance
+    validations:
+      required: true
