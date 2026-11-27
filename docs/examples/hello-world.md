@@ -6,17 +6,34 @@ keywords: tui hello world, zig tui quickstart example, tui.init, tui.Ui
 
 # Hello World & Quickstart
 
-Run interactively:
+Run interactively or in headless mode:
 
 ```sh
 zig build run-hello-world
+zig build run-hello-world -- --headless
 ```
 
-## Highlights
+## Expected Terminal Output
 
-- Uses `tui.init(alloc, .{ .io = init.io, .backend = if (headless) .{ .memory = ... } else .auto })`
-- Automatically tears down raw mode and alternate screen via `defer app.deinit();`
-- Demonstrates flat `Ui` composition (`header`, `panel`, `paragraph`, `spinner`, `statusBar`)
+```text
+tui.zig  Hello World                                                      v0.1.0
+
+    ┌─ Welcome ────────────────────────────────────────────────────────────┐
+    │                                                                      │
+    │                  Hello from native Zig terminal UI!                  │
+    │                                                                      │
+    │  ⠋ Running event loop smoothly                                       │
+    │                                                                      │
+    └──────────────────────────────────────────────────────────────────────┘
+
+ READY   Hello World Example                                        q / Esc Quit
+```
+
+## How It Works
+
+- **`tui.init`**: Binds a single `std.mem.Allocator` and selects `.auto` (native Win32/POSIX) or `.memory` when `--headless` is passed.
+- **`defer app.deinit()`**: Restores terminal mode, alternate screen, and mouse tracking even on early return.
+- **`Ui.rows` & `panel`**: Splits the viewport into a 1-row `Header`, a filling body `Panel` with symmetric margin, and a 1-row `StatusBar`.
 
 ## Source (`examples/hello_world.zig`)
 

@@ -1,7 +1,7 @@
 ---
 title: Charts, Gauges & Canvas Examples
-description: Visualize metrics with XY Charts, Sparklines, BarCharts, sub-cell Gauges, Spinners, and vector Canvas grids.
-keywords: tui charts example, zig braille canvas, Sparkline BarChart example, Gauge Spinner zig
+description: Visualize metrics with XY Charts, PieCharts, Sparklines, BarCharts, sub-cell Gauges, Spinners, and vector Canvas grids.
+keywords: tui charts example, zig braille canvas, Sparkline BarChart example, Gauge Spinner zig, PieChart
 ---
 
 # Charts, Gauges & Canvas Examples
@@ -14,7 +14,36 @@ zig build run-progress
 zig build run-app-shell
 ```
 
-## Procedural `Canvas` Painting (`examples/canvas.zig`)
+## 1. XY Charts, PieCharts, Sparklines & BarCharts (`examples/charts.zig`)
+
+Pairs multi-series XY `Chart` plots, interactive `PieChart` presets (press `p` to cycle `.solid`, `.segmented`, `.hud`, and `.rose`), `Sparkline`, and horizontal `BarChart`:
+
+```text
+╭─ Network Throughput ─────────────╮ ╭─ Traffic Share ─────────────╮
+│ 100 ┤                       ⡠⠊  │ │   ▄▄███▄▄     ■ API 46%     │
+│  50 ┤             ⡠⠒⠊⠉⠑⠒⠤⠊⠁     │ │  ██▀   ▀██    ■ Worker 31%  │
+│   0 ┼──────┬──────┬──────┬────── │ │  ██▄ 100%██   ■ Cache 23%   │
+│     0            50          100 │ │   ▀▀███▀▀                   │
+╰──────────────────────────────────╯ ╰─────────────────────────────╯
+```
+
+```zig
+try pie_ui.pieChart(.{
+    .slices = &.{
+        .{ .label = "API", .value = 46, .color = tui.palette.sky.c400 },
+        .{ .label = "Worker", .value = 31, .color = tui.palette.emerald.c400 },
+        .{ .label = "Cache", .value = 23, .color = tui.palette.amber.c400 },
+    },
+    .pie_style = .solid,
+    .donut_ratio = 0.45,
+    .center_label = "100%",
+    .block = .{ .title = "Traffic Share", .border_type = .rounded },
+}, pie_ui.area);
+```
+
+## 2. Procedural `Canvas` Painting (`examples/canvas.zig`)
+
+Draw vector circles, lines, rectangles, polygons, and text labels on Braille, HalfBlock, or Quadrant sub-cell grids:
 
 ```zig
 const canvas = tui.Canvas{
@@ -33,7 +62,7 @@ try canvas.paintWith(&body, body.area, state.tick, struct {
 }.draw);
 ```
 
-## App Shell Plots
+## 3. Gauges & Progress (`examples/gauge.zig`, `examples/progress.zig`)
 
-- **`examples/charts.zig`** (`charts`): Multi-series `Chart`, interactive `PieChart` (press `p` to switch `.solid`, `.segmented`, `.hud`, and `.rose`), `Sparkline`, and horizontal `BarChart`.
-- **`examples/app_shell.zig`** (`app-shell`): Pairs `Navbar`, Left (`LTR`) / Right (`RTL`) toggleable `Sidebar`, bottom `StatusBar`, `AppInfo` window title sync, donut `PieChart` with centered percentage label, filled `.area` + `.step` `Chart` datasets, gradient `Heatmap`, filterable `LogViewer`, `DiffViewer`, `Stepper`, `Pagination`, `Dropdown`, `KeyValueList`, and stacked `ToastManager(3)`.
+- **`Gauge` & `LineGauge`**: 1/8th-cell fractional block meters with custom label styles.
+- **`ProgressBar` & `Spinner`**: Determinate/indeterminate progress bars paired with animated frame spinners.

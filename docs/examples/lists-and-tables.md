@@ -17,7 +17,20 @@ zig build run-markdown-palette
 zig build run-inline-viewport
 ```
 
-## Striped Data Table (`examples/table.zig`)
+## 1. Striped Data Table (`examples/table.zig`)
+
+Renders a scrollable `Table` with sticky header and footer rows, constraint-sized columns, alternating row striping, and active cell highlighting:
+
+```text
+┌─ Cluster Services ───────────────────────────────────────────────────┐
+│ Service            Status      CPU      Memory     Uptime            │
+│ ──────────────────────────────────────────────────────────────────── │
+│ api-gateway        Healthy     18.2%    240 MB     99.98%            │
+│>auth-worker        Healthy     12.4%    164 MB     99.95%            │
+│ ──────────────────────────────────────────────────────────────────── │
+│ Total: 6           4 Healthy   65.9%    982 MB     avg 98.9%         │
+└──────────────────────────────────────────────────────────────────────┘
+```
 
 ```zig
 try body.table(.{
@@ -32,6 +45,15 @@ try body.table(.{
 }, &state.table, body.area);
 ```
 
-## Confirmation Modals & Toasts (`examples/popup.zig`)
+## 2. Lists, Tabs, ScrollViews & Inline Viewports
 
-Render overlays last on the root `Ui` so backdrop dimming, shadowed rounded borders, buttons, and corner toasts paint cleanly over any background layout.
+- **`examples/list.zig`** (`list`): Stateful scrollable `List` synchronized with a proportional `Scrollbar`.
+- **`examples/tabs.zig`** (`tabs`): Keyboard/mouse `Tabs` switcher paired with `Breadcrumbs`.
+- **`examples/scrollbar.zig`** (`scrollbar`): `ScrollView` wrapping long log content with mouse wheel and `PgUp`/`PgDn` scrolling.
+- **`examples/inline_viewport.zig`** (`inline-viewport`): `.inline_height` viewport appending scrollback history above the active UI via `app.insertBefore(...)`.
+
+## 3. Calendar, Markdown, CommandPalette & Popups
+
+- **`examples/calendar.zig`** (`calendar`): Responsive monthly `Calendar` grid with date navigation, `PgUp`/`PgDn` month paging, Monday/Sunday first-day toggle (`m`), and event highlights.
+- **`examples/markdown_and_palette.zig`** (`markdown-palette`): `BigText` banner, scrollable `Markdown`, `Tooltip`, and fuzzy-filtered `CommandPalette` (`app.commandPalette()`).
+- **`examples/popup.zig`** (`popup`): Dimmed backdrop, centered `ConfirmDialog` modal, and corner `Toast` notification.

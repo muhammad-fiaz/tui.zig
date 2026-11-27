@@ -8,6 +8,9 @@ keywords: tui.zig examples, zig tui examples, custom widget example, dashboard z
 
 Every example compiles standalone via `zig build examples`, runs deterministically with `--headless` via `zig build run-all-examples`, and launches interactively via `zig build run-<name>`.
 
+Browse walkthroughs with code snippets and ASCII terminal previews:
+[Hello World](./hello-world.md) | [Layout & Styling](./layout-and-styling.md) | [Forms & Inputs](./forms-and-inputs.md) | [Lists & Tables](./lists-and-tables.md) | [Charts & Canvas](./charts-and-canvas.md) | [Events & Mouse](./events-and-mouse.md) | [Custom Widgets](./custom-widgets.md) | [Advanced Apps](./advanced-apps.md)
+
 ## Interactive & Core Widget Examples
 
 | Command | Source | Highlights |
