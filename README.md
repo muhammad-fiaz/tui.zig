@@ -1,5 +1,6 @@
 <div align="center">
-<img src="docs/public/logo.svg" alt="tui.zig logo" width="400" />
+    
+# TUI.zig
 
 <a href="https://muhammad-fiaz.github.io/tui.zig/"><img src="https://img.shields.io/badge/docs-muhammad--fiaz.github.io-blue" alt="Documentation"></a>
 <a href="https://ziglang.org/"><img src="https://img.shields.io/badge/Zig-0.17.0%2B-orange.svg?logo=zig" alt="Zig Version"></a>
@@ -49,20 +50,23 @@
 
 ## Why Use tui.zig?
 
-**One native Zig library for terminal rendering, layout, input handling, and custom interfaces.**
+**A zero-dependency native Zig library for terminal rendering, layout, input handling, and custom interfaces.**
 
-- **Zero C dependencies on Zig 0.17.0+:** Talks directly to Win32 Console APIs on Windows and native POSIX `termios` / `poll` / `TIOCGWINSZ` / `SIGWINCH` on Linux, macOS, and BSD—supporting both 32-bit and 64-bit targets without linking `ncurses` or `libc`.
-- **Flicker-free double-buffered rendering:** Compares front and back cell grids per frame, writes only modified spans with delta SGR transitions, keeps wide CJK and emoji clusters column-aligned, emits OSC 8 clickable links, and brackets updates with synchronized output (`CSI ? 2026 h/l`).
-- **Explicit allocator ownership, `AppInfo` & live window controls:** Pass your `std.mem.Allocator` once in `tui.init(allocator, .{ .app = .{ .name = "...", .version = "...", .title = "..." } })`, reuse it directly via `app.textInput()`, `app.treeState()`, `app.commandPalette()`, and zero-churn `app.snapshot()`, access metadata inside frames via `ui.app`, update live terminal titles with `app.setTitle(...)`, and guarantee full mode restoration on `defer app.deinit()`.
-- **Constraint and responsive layout engine:** Splits screens cleanly on the stack using `rows`, `cols`, and `splitFixed` with fixed sizes, percentages, ratios, min/max bounds, weighted `.fill`, flex spacing, edge-merged borders, and responsive breakpoint checks (`ui.isCompact`).
-- **OKLCH Color palettes & 17 themes:** Provides 24-bit RGB, HSL, HSV, Hex, CSS named colors, and direct OKLCH colors (`Color.oklch`), official OKLCH Color palettes across 26 families (`slate`, `stone`, `sky`, `lime`, `fuchsia`, `mauve`, `olive`, `mist`, `taupe`, etc.), automatic ANSI-256 and ANSI-16 terminal degradation, JSON theme loading, and 17 built-in presets.
-- **40+ widgets, shell navigation, plots, fonts/i18n & VT view:** Includes `Navbar`, Left (`LTR`) / Right (`RTL`) `Sidebar`, cascading `DropdownMenu`, `StatusBar`, `Block` panels, wrapping paragraphs, Markdown viewer, tables, lists, collapsible trees, tabs, live-validated text inputs, multi-line editors, switches, sliders, accordions, calendars, command palettes, popups, overflow-safe `ToastManager`, `Stepper`, `Pagination`, `LogViewer` (with `EWIDT` target matrix), `DiffViewer`, `TerminalView` (`VtScreen`), `KeyValueList`, gauges, sparklines, bar charts, XY charts (`.area`, `.step`, `.line`, `.scatter`, `.bar`), `PieChart`, `Heatmap`, vector canvases, custom `BitmapFont` & client-owned `Locale`/RTL support, `Tween`/`Spring`/`Transition` motion primitives, `Skeleton` loading shimmers, `tui.fx` buffer effects, and zero-vtable custom stateless/stateful widget dispatch (`ui.renderWidget` and `ui.renderStateful`).
-- **Inline scrollback logs & headless CI testing:** Supports fullscreen alternate screens, fixed sub-rectangles, `.inline_height` viewports that append scrollback history via `insertBefore`, and an in-memory backend for deterministic unit and `--headless` snapshot testing.
+- **Zero C dependencies on Zig 0.17.0+:** Communicates directly with Win32 Console APIs on Windows and native POSIX interfaces (`termios`, `poll`, `TIOCGWINSZ`, `SIGWINCH`) on Linux, macOS, and BSD—supporting both 32-bit and 64-bit targets without linking `ncurses` or `libc`.
+- **Flicker-free double-buffered rendering:** Diffs front and back cell grids each frame, emits only changed spans with minimal SGR transitions, preserves column alignment for wide CJK and emoji clusters, supports OSC 8 clickable links, and brackets updates with synchronized output (`CSI ? 2026 h/l`).
+- **Explicit allocator ownership, `AppInfo` & live window controls:** Pass a `std.mem.Allocator` once to `tui.init(allocator, .{ .app = .{ .name = "...", .version = "...", .title = "..." } })`, reuse it across `app.textInput()`, `app.treeState()`, `app.commandPalette()`, and zero-churn `app.snapshot()`, access metadata inside frames via `ui.app`, update terminal titles dynamically with `app.setTitle(...)`, and guarantee clean terminal restoration via `defer app.deinit()`.
+- **Constraint-based & responsive layout engine:** Partitions viewports on the stack using `rows`, `cols`, and `splitFixed` with fixed sizes, percentages, ratios, min/max bounds, weighted `.fill`, flex spacing, edge-merged borders, and responsive breakpoint helpers (`ui.isCompact`).
+- **OKLCH color palettes & 17 built-in themes:** Supports 24-bit RGB, HSL, HSV, Hex, CSS named colors, and native OKLCH (`Color.oklch`), alongside 26 OKLCH color families (`slate`, `stone`, `sky`, `lime`, `fuchsia`, `mauve`, `olive`, `mist`, `taupe`, etc.), automatic degradation to ANSI-256 and ANSI-16 terminals, JSON theme loading, and 17 built-in presets.
+- **40+ widgets, shell navigation, plots, i18n & VT emulation:**
+  - *Navigation & Layout:* `Navbar`, `Sidebar` (LTR/RTL), cascading `DropdownMenu`, `StatusBar`, `Block` panels, `Tabs`, `Accordion`, `Stepper`, `Pagination`, `Popup`, and overflow-safe `ToastManager`.
+  - *Text, Inputs & Data:* Wrapping paragraphs, Markdown viewer, tables, lists, collapsible trees, live-validated `TextInput`, multi-line `TextArea`, switches, sliders, calendars, command palettes, `KeyValueList`, `LogViewer` (with `EWIDT` target matrix), `DiffViewer`, and an embedded `TerminalView` (`VtScreen`).
+  - *Charts, Motion & Extensibility:* Gauges, sparklines, bar charts, XY charts (`.area`, `.step`, `.line`, `.scatter`, `.bar`), `PieChart`, `Heatmap`, vector canvases, custom `BitmapFont` and client-owned `Locale`/RTL support, `Tween`/`Spring`/`Transition` motion primitives, `Skeleton` shimmers, `tui.fx` buffer effects, and zero-vtable custom widget dispatch (`ui.renderWidget` and `ui.renderStateful`).
+- **Inline scrollback & headless CI testing:** Supports fullscreen alternate screens, fixed sub-rectangles, `.inline_height` viewports that append to terminal scrollback via `insertBefore`, and an in-memory backend for deterministic unit and `--headless` snapshot testing.
 
 > [!NOTE]
-> tui.zig is actively evolving, and APIs may change across releases as widget ergonomics and defaults improve. Review release notes and documentation before upgrading between versions.
+> `tui.zig` is under active development, and public APIs may change across releases as widget ergonomics and defaults evolve. Review the release notes and documentation before upgrading between versions.
 >
-> **Contributions are welcome!** Bug reports, feature suggestions, documentation fixes, and pull requests are appreciated.
+> **Contributions are welcome.** Bug reports, feature requests, documentation improvements, and pull requests are appreciated.
 
 ---
 
