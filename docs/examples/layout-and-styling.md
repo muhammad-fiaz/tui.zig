@@ -1,64 +1,42 @@
 ---
-title: Layout, Borders & Styling Examples
-description: Constraints, flex alignment, border collapsing, 17 themes, OKLCH color palettes, and continuous 24-bit color gradients.
+title: Layout, Borders & Styling
+description: Self-contained examples for constraint splits, adjacent border collapsing, runtime theme switching, OKLCH palettes, and text wrapping.
 keywords: tui layout example, border collapsing zig, OKLCH tui colors, runtime theme switcher
 ---
 
-# Layout, Borders & Styling Examples
+# Layout, Borders & Styling
 
-Explore constraint layouts, overlapping border collapsing, OKLCH color scales, text wrapping, and runtime theme switching:
+## 1. Constraint Splits & Collapsed Borders
 
-```sh
-zig build run-basic-layout
-zig build run-styling
-zig build run-colors
-zig build run-borders
-zig build run-paragraph
-```
-
-## 1. Constraint Splits & Flex (`examples/basic_layout.zig`)
-
-Demonstrates `cols`, `rows`, fixed lengths, percentages, ratios, and `Flex` alignment modes (`start`, `center`, `end`, `space_between`, `space_around`):
+**Use case:** Multi-pane IDE or dashboard grids where adjacent boxes share a border without doubling line thickness.
 
 ```text
 ┌─ Top Fixed (3 rows) ─────────────────────────────────────────────────┐
 └──────────────────────────────────────────────────────────────────────┘
-┌─ Left (30%) ──────┐ ┌─ Center (Fill) ──────────┐ ┌─ Right (16 cols) ─┐
-│                   │ │                          │ │                   │
-└───────────────────┘ └──────────────────────────┘ └───────────────────┘
+┌─ Left Pane ───────────────┬─ Right Pane ─────────────────────────────┐
+│ 35% width                 │ Remaining fill width                     │
+│ Shared border merges cleanly into ┬ and ┴                            │
+└───────────────────────────┴──────────────────────────────────────────┘
 ```
 
 ```zig
-const cols = body.cols(3, .{
-    .{ .percentage = 30 },
-    .{ .fill = 1 },
-    .{ .length = 16 },
-}, .{ .spacing = .{ .space = 1 } });
+fn renderLayout(ui: *tui.Ui) !void {
+    const rows = ui.rows(2, .{ .{ .length = 3 }, .{ .fill = 1 } }, .{});
+    try ui.block(.{ .title = "Top Fixed (3 rows)", .border_type = .plain }, rows[0].area);
+
+    const a = rows[1].area;
+    const mid = a.left() + (a.width * 35) / 100;
+    const left_r = tui.Rect.init(a.left(), a.top(), (mid - a.left()) + 1, a.height);
+    const right_r = tui.Rect.init(mid, a.top(), a.right() - mid, a.height);
+
+    try ui.block(.{ .title = "Left Pane", .border_type = .plain, .merge_borders = .fuzzy }, left_r);
+    try ui.block(.{ .title = "Right Pane", .border_type = .plain, .merge_borders = .fuzzy }, right_r);
+}
 ```
 
-## 2. Adjacent Border Collapsing (`examples/borders.zig`)
+## 2. Runtime Theme Switching & Rich Text
 
-When adjacent blocks share a boundary column or row, `.merge_borders = .fuzzy` merges overlapping edges into box junctions (`┬`, `┴`, `├`, `┤`, `┼`):
-
-```text
-┌─ Left Pane ───────────────┬─ Right Pane ──────────────────┐
-│                           │                               │
-│ Shared center border      │ Collapsed into ┬ and ┴        │
-│                           │                               │
-└───────────────────────────┴───────────────────────────────┘
-```
-
-```zig
-const mid = a.left() + a.width / 2;
-const left_r = tui.Rect.init(a.left(), a.top(), (mid - a.left()) + 1, a.height);
-const right_r = tui.Rect.init(mid, a.top(), a.right() - mid, a.height);
-try p.block(.{ .title = "Left Pane", .border_type = .plain, .merge_borders = .fuzzy }, left_r);
-try p.block(.{ .title = "Right Pane", .border_type = .plain, .merge_borders = .fuzzy }, right_r);
-```
-
-## 3. Runtime Theme Switching & Rich Text (`examples/styling.zig`)
-
-Cycle through built-in themes (`dark`, `nord`, `catppuccin`, `tokyo_night`, `gruvbox`, `dracula`, `solarized`) while inspecting bold, italic, curly underline, strikethrough, and OSC 8 hyperlinks:
+**Use case:** User-selectable color themes paired with semantic underlines, bold/italic attributes, and OSC 8 clickable links.
 
 ```zig
 const presets = [_]tui.Theme{
@@ -70,13 +48,32 @@ const presets = [_]tui.Theme{
     tui.Theme.dracula,
     tui.Theme.solarized,
 };
-app.setTheme(presets[idx]);
+
+// Inside onEvent:
+if (event.isChar('t')) {
+    state.theme_idx = (state.theme_idx + 1) % presets.len;
+    app.setTheme(presets[state.theme_idx]);
+}
+
+// Inside render:
+const spans = [_]tui.Span{
+    tui.Span.styled("Warning", ui.theme.warning.withUnderlineStyle(.curly)),
+    tui.Span.raw("  "),
+    tui.Span.link("Docs", "https://muhammad-fiaz.github.io/tui.zig/"),
+};
+const lines = [_]tui.Line{tui.Line.fromSpans(&spans)};
+try ui.paragraph(.{ .text = tui.Text.fromLines(&lines), .wrap = .word }, area);
 ```
 
-## 4. OKLCH Color Palettes & Gradients (`examples/colors.zig`)
+## 3. OKLCH Color Palettes & Continuous Gradients
 
-Displays ANSI-16 swatches, compile-time OKLCH shade ramps (`tui.palette.sky.c50` .. `c950`), and continuous 24-bit gradients via `tui.palette.gradientColors`.
+**Use case:** Heat strips, status badges, and smooth 24-bit color ramps that automatically downgrade on ANSI-256 or ANSI-16 terminals.
 
-## 5. Multi-Span Wrapping & Scroll (`examples/paragraph.zig`)
+```zig
+var ramp: [16]tui.Color = undefined;
+tui.palette.gradientColors(&ramp, &.{ tui.palette.sky.c400, tui.palette.emerald.c400 });
 
-Demonstrates mixed `Span` styles, CJK/emoji display widths, `.word` and `.char` wrapping, and vertical scroll offsets.
+for (ramp, 0..) |c, i| {
+    _ = ui.buffer.setStringClipped(area.left() + @as(u16, @intCast(i)), area.top(), "█", 1, .{ .foreground = c }, area);
+}
+```

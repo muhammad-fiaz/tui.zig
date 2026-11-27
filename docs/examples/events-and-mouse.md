@@ -1,39 +1,49 @@
 ---
-title: Events, Mouse & Resize Examples
-description: Live normalized event inspection, layout-derived mouse hitboxes, wheel events, and responsive layout breakpoints.
+title: Events, Mouse & Responsive Resize
+description: Self-contained examples for normalized keyboard/mouse event handling, layout-derived hitboxes, and responsive terminal breakpoints.
 keywords: tui mouse events example, terminal resize responsive zig, tui Event inspector, hitboxes
 ---
 
-# Events, Mouse & Resize Examples
+# Events, Mouse & Responsive Resize
 
-```sh
-zig build run-events
-zig build run-mouse
-zig build run-terminal-resize
-```
+## 1. Normalized Keyboard, Mouse & Resize Events
 
-## 1. Normalized Event Inspector (`examples/events.zig`)
-
-Captures and formats `.key` (with `ctrl`/`alt`/`shift` modifiers and press/repeat/release kind), `.mouse`, `.resize`, `.paste`, and `.focus` events in real time:
+**Use case:** Handling cross-platform key modifiers, mouse clicks, wheel events, bracketed paste, and terminal resize signals uniformly.
 
 ```zig
-switch (event) {
-    .key => |k| {
-        // Inspect k.code, k.modifiers.ctrl, k.modifiers.alt, k.kind
-    },
-    .mouse => |m| {
-        // Inspect m.kind (.down, .up, .drag, .move, .scroll_up, .scroll_down), m.x, m.y
-    },
-    .resize => |sz| {
-        // Inspect sz.width, sz.height
-    },
-    else => {},
+fn onEvent(state: *State, event: tui.Event, app: *tui.App) !bool {
+    switch (event) {
+        .key => |k| {
+            if (k.kind == .release) return true;
+            if (k.isChar('q') or event.isEscape() or event.isCtrlC()) {
+                app.quit();
+                return false;
+            }
+            if (k.modifiers.ctrl and k.isChar('s')) {
+                state.saved_count += 1;
+            }
+        },
+        .mouse => |m| {
+            if (m.isLeftClickInside(state.button_rect)) {
+                state.clicks += 1;
+            } else if (m.isInside(state.meter_rect)) {
+                if (m.kind == .scroll_up) state.level = @min(100, state.level + 5);
+                if (m.kind == .scroll_down) state.level -|= 5;
+            }
+        },
+        .resize => |sz| {
+            state.last_width = sz.width;
+            state.last_height = sz.height;
+        },
+        else => {},
+    }
+    return true;
 }
 ```
 
-## 2. Layout-Derived Mouse Hitboxes (`examples/mouse.zig`)
+## 2. Layout-Derived Mouse Hitboxes
 
-Record rendered `Rect` bounds during `render` and test `m.isInside(rect)` or `m.isLeftClickInside(rect)` in `onEvent` so hitboxes stay aligned across resizes:
+**Use case:** Keeping clickable zones and wheel targets synchronized with dynamic split layouts across terminal resizes.
 
 ```text
 ┌─ Zone A (Clicks: 3) ──────┐  ┌─ Wheel Meter ──────────────┐
@@ -41,13 +51,11 @@ Record rendered `Rect` bounds during `render` and test `m.isInside(rect)` or `m.
 └───────────────────────────┘  └────────────────────────────┘
 ```
 
-## 3. Responsive Breakpoints (`examples/terminal_resize.zig`)
+Record each child `Ui.area` during `render` into `State`, then test `m.isInside(rect)` or `m.isLeftClickInside(rect)` in `onEvent`.
 
-`ui.area.width` and `ui.isCompact(cols)` adapt automatically on `.resize` or `app.resizeTest(size)`:
+## 3. Responsive Breakpoints (`ui.isCompact`)
 
-- **`w < 50`**: stacked single-column layout
-- **`50 <= w < 90`**: 2-column navigation + main pane
-- **`w >= 90`**: 3-column sidebar + workspace + inspector
+**Use case:** Adapting 3-column desktop terminal layouts cleanly down to 2-column and stacked 1-column views on narrow splits or phones.
 
 ```zig
 if (ui.isCompact(50)) {

@@ -1,24 +1,14 @@
 ---
-title: Custom & Stateful Widgets Examples
-description: Client-side custom stateless widgets, custom stateful widgets, responsive custom UI architecture, animations, custom loops, and i18n.
+title: Custom & Stateful Widgets
+description: Self-contained examples for custom stateless/stateful widgets, Tree expand/collapse, animations, custom event loops, and client-owned Locale i18n.
 keywords: tui.zig custom widgets example, zig custom ui, renderStateful example, renderWidget example
 ---
 
-# Custom & Stateful Widgets Examples
+# Custom & Stateful Widgets
 
-```sh
-zig build run-custom-widget
-zig build run-custom-ui
-zig build run-custom-stateful-widget
-zig build run-animations-effects
-zig build run-custom-loop
-zig build run-custom-fonts-i18n
-zig build run-stateful-widgets
-```
+## 1. Custom Stateless & Stateful Widgets
 
-## 1. Custom Stateless & Stateful Widgets (`examples/custom_widget.zig`, `examples/custom_stateful_widget.zig`)
-
-Any Zig struct declaring `render` or `renderStateful` works directly with `ui.renderWidget` and `ui.renderStateful`:
+**Use case:** Building domain-specific cards, badges, or interactive pickers that compose with `ui.renderWidget` and `ui.renderStateful` without vtables.
 
 ```zig
 const MetricBadge = struct {
@@ -29,14 +19,24 @@ const MetricBadge = struct {
     pub fn render(self: MetricBadge, ui: *tui.Ui, area: tui.Rect) !void {
         try ui.block(.{ .title = self.label, .border_type = .rounded }, area);
         const inner = (tui.Block{ .border_type = .rounded }).inner(area);
-        _ = ui.buffer.setStringClipped(inner.left(), inner.top(), self.value, inner.width, .{ .foreground = self.accent, .bold = true }, inner);
+        _ = ui.buffer.setStringClipped(
+            inner.left(),
+            inner.top(),
+            self.value,
+            inner.width,
+            .{ .foreground = self.accent, .bold = true },
+            inner,
+        );
     }
 };
+
+// Render anywhere on a Ui region:
+try ui.renderWidget(MetricBadge{ .label = "Latency", .value = "1.4 ms", .accent = tui.palette.emerald.c400 }, area);
 ```
 
-## 2. Tree Expand/Collapse & SplitPanes (`examples/stateful_widgets.zig`)
+## 2. Collapsible `Tree` & `SplitPane`
 
-Combines `SplitPane`, `Tree` (`expandAll` with `e`, `collapseAll` with `c`, node toggle with `Enter`/`Space`), and `List`:
+**Use case:** File explorers, AST inspectors, and hierarchical navigation with `expandAll`, `collapseAll`, and per-node toggling.
 
 ```text
 ┌─ Module Tree ─────────────┐│┌─ Quick Actions ────────────┐
@@ -47,9 +47,24 @@ Combines `SplitPane`, `Tree` (`expandAll` with `e`, `collapseAll` with `c`, node
 └───────────────────────────┘│└─────────────────────────────┘
 ```
 
-## 3. Animations, Custom Event Loops & i18n
+```zig
+const tree_roots = [_]tui.TreeNode{
+    tui.TreeNode.branch("src", &.{
+        tui.TreeNode.branch("core", &.{
+            tui.TreeNode.leaf("buffer.zig"),
+            tui.TreeNode.leaf("layout.zig"),
+        }),
+    }),
+};
 
-- **`examples/custom_ui.zig`** (`custom-ui`): Responsive breakpoints, clickable `FilterPills`, `ServiceCard` components, and live search filtering.
-- **`examples/animations_and_effects.zig`** (`animations-effects`): `Tween` easing curves, `Spring` physics, `Transition` modals, `Skeleton` shimmers, `ToastState` timers, and `tui.fx` cell effects.
-- **`examples/custom_event_loop.zig`** (`custom-loop`): Client-owned loop using `app.advanceTimer()`, non-blocking `app.pollEvent(0)`, manual `app.draw()`, and `app.sleepFrame()`.
-- **`examples/custom_fonts_and_i18n.zig`** (`custom-fonts-i18n`): Client `BitmapFont` glyphs, `symbols.icons`, `RTL` reordering via `visualOrderInto`, client-owned `Locale` tables, and localized `Calendar` grids.
+// Expand all, collapse all, or handle Enter/Space/Arrows/Click:
+try state.tree.expandAll(&tree_roots);
+state.tree.collapseAll();
+_ = try state.tree.handleEvent(event, &tree_roots, tree_inner, true);
+```
+
+## 3. Animations, Custom Event Loops & Client-Owned `Locale`
+
+- **Animations & `tui.fx`**: Drive `Tween`, `Spring`, `Transition`, and `Skeleton` shimmers from `app.deltaMs()` and apply `tui.fx.pulseHighlight` or `tui.fx.sweepWipe` directly on `ui.buffer`.
+- **Custom Event Loop**: Bypass `app.run(...)` with `app.advanceTimer()`, `app.pollEvent(0)`, `app.draw(...)`, and `app.sleepFrame()` when integrating async I/O or background tasks.
+- **Client-Owned `Locale` & `BitmapFont`**: Define `tui.Locale` structs explicitly for every language (months, weekdays, decimal separators, translation entries, `.rtl`/`.ltr` direction) alongside custom `tui.BitmapGlyph` banners.

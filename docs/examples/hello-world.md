@@ -1,19 +1,14 @@
 ---
-title: Hello World Example
-description: Annotated walkthrough of examples/hello_world.zig showing App initialization, layout, panel, and headless testing.
+title: Hello World & Quickstart
+description: Self-contained quickstart showing App initialization, constraint layout, Panel, Spinner, StatusBar, and headless snapshot testing.
 keywords: tui hello world, zig tui quickstart example, tui.init, tui.Ui
 ---
 
 # Hello World & Quickstart
 
-Run interactively or in headless mode:
+**Use case:** Starting any terminal application with managed raw mode, alternate screen, a 3-row header/body/footer layout, and clean terminal restoration on exit.
 
-```sh
-zig build run-hello-world
-zig build run-hello-world -- --headless
-```
-
-## Expected Terminal Output
+## Output Preview
 
 ```text
 tui.zig  Hello World                                                      v0.1.0
@@ -29,13 +24,7 @@ tui.zig  Hello World                                                      v0.1.0
  READY   Hello World Example                                        q / Esc Quit
 ```
 
-## How It Works
-
-- **`tui.init`**: Binds a single `std.mem.Allocator` and selects `.auto` (native Win32/POSIX) or `.memory` when `--headless` is passed.
-- **`defer app.deinit()`**: Restores terminal mode, alternate screen, and mouse tracking even on early return.
-- **`Ui.rows` & `panel`**: Splits the viewport into a 1-row `Header`, a filling body `Panel` with symmetric margin, and a 1-row `StatusBar`.
-
-## Source (`examples/hello_world.zig`)
+## Complete Example
 
 ```zig
 const std = @import("std");
@@ -85,4 +74,24 @@ fn render(state: *State, ui: *tui.Ui) !void {
         .right = &.{.{ .text = "q / Esc Quit" }},
     }, bottom.area);
 }
+
+pub fn main(init: std.process.Init) !void {
+    const alloc = init.gpa;
+    var app = try tui.init(alloc, .{
+        .app = .{ .name = "Hello World", .version = tui.version },
+        .io = init.io,
+        .settings = .{ .fps = 12 },
+    });
+    defer app.deinit();
+
+    var state = State{};
+    try app.enter();
+    try app.run(&state, .{ .onEvent = onEvent, .render = render });
+}
 ```
+
+## Key Takeaways
+
+- `tui.init(alloc, ...)` binds one explicit allocator for buffers, scratch arena, and event parsing.
+- `defer app.deinit()` guarantees terminal mode and alternate screen restoration even if an error is returned.
+- `ui.rows` splits the frame into fixed (`length = 1`) chrome bars and a flexible (`fill = 1`) workspace.
