@@ -37,6 +37,8 @@ Initializes an `App`, validates `options.settings` against `AppSettingsSchema` o
 
 Inside `settings` (`AppSettings`):
 - `alternate_screen: bool = true`, `raw_mode: bool = true`, `mouse: bool = false`, `bracketed_paste: bool = true`, `focus_events: bool = false`, `hide_cursor: bool = true`, `synchronized_output: bool = true`, `title: ?[]const u8 = null`, `fps: u16 = 60` (`1..240`), `tab_size: u8 = 4` (`1..16`).
+- `EnterOptions` (derived via `EnterOptionsSchema`) configures alternate screen, raw mode, mouse, bracketed paste, focus events, cursor hiding, and window title on `app.enter()`.
+- `ThemeSpec` (validated via `ThemeSpecSchema`) parses custom themes from structured config or JSON, and `ClearType` (`.all`, `.after_cursor`, `.before_cursor`, `.current_line`) controls backend screen clearing.
 - Parse settings from JSON via `try AppOptions.parseSettingsJson(alloc, json_bytes)` (omitted keys inherit schema defaults automatically).
 
 ## `App` Methods

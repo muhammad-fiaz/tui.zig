@@ -18,6 +18,7 @@ keywords: tui.Color, OKLCH Color, oklch, tui.Style, OSC 8 hyperlinks, tui.Theme,
 ## Borders & Symbols
 
 - `BorderSides`: `.none`, `.all`, `.horizontal`, `.vertical`, or individual `.top`, `.right`, `.bottom`, `.left`
+- `BorderSet`: custom corner/edge glyph set (`top_left`, `top_right`, `bottom_left`, `bottom_right`, `horizontal_top`, `horizontal_bottom`, `vertical_left`, `vertical_right`)
 - `BorderType`: `.plain`, `.rounded`, `.double`, `.thick`, `.ascii`, `.light_double_dashed`, `.heavy_double_dashed`, `.light_triple_dashed`, `.heavy_triple_dashed`, `.light_quadruple_dashed`, `.heavy_quadruple_dashed`, `.quadrant_outside`, `.quadrant_inside`, `.one_eighth_wide`, `.one_eighth_tall`, `.full`, `.empty`
 - `MergeStrategy`: `.replace`, `.exact`, `.fuzzy`
 - `symbols`: `.line`, `.block`, `.bar`, `.scrollbar`, `.checkbox`, `.radio`, `.tree`, `.spinner`, `.quadrants`, `.braille_dot_bits`, `.encodeBrailleMask`, `.icons` (`IconSet`: `.unicode`, `.ascii`, `.nerd`)

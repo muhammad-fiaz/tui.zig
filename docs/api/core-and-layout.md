@@ -27,10 +27,12 @@ Passed to draw callbacks and custom widgets. Provides zero-allocation splitting,
 - `renderWidget(self: *Ui, widget: anytype, target_area: ?Rect) !void`
 - `renderStateful(self: *Ui, widget: anytype, state: anytype, target_area: ?Rect) !void`
 
-## Geometry Primitives
+## Geometry & Layout Primitives
 
-- `Position { x: u16, y: u16 }`
+- `Position { x: u16, y: u16 }`, `Offset { x: i32, y: i32 }`
 - `Size { width: u16, height: u16 }`
+- `Alignment` (`.left`, `.center`, `.right`), `VerticalAlignment` (`.top`, `.center`, `.bottom`)
+- `Flex` (`.start`, `.center`, `.end`, `.space_between`, `.space_around`), `Spacing` (`.space`, `.overlap`)
 - `Margin { horizontal: u16 = 0, vertical: u16 = 0 }` (`Margin.uniform`, `Margin.symmetric`)
 - `Padding { left: u16 = 0, right: u16 = 0, top: u16 = 0, bottom: u16 = 0 }` (`Padding.uniform`, `Padding.symmetric`, `Padding.horizontal`, `Padding.vertical`)
 - `Rect { x, y, width, height }` (`init`, `intersection`, `unionWith`, `inner`, `inset`, `containsXY`, `clampPos`, `isEmpty`)
@@ -41,4 +43,4 @@ Passed to draw callbacks and custom widgets. Provides zero-allocation splitting,
 - `get(x, y) ?*const Cell` / `getMut(x, y) ?*Cell`
 - `setStringClipped(x, y, text, max_w, style, clip) Position`
 - `setStyle(area, style)` / `fill(area, sym, style)` / `merge(other)` / `toPlainTextAlloc(alloc)`
-- `Cell`: `.empty`, `.symbol()`, `.setSymbol`, `.mergeSymbol`, `.setStyle`, `.style()`, `.cellWidth()`, `.hyperlink`
+- `Cell`: `.empty`, `.symbol()`, `.setSymbol`, `.mergeSymbol`, `.setStyle`, `.style()`, `.cellWidth()`, `.hyperlink`, `.diff_option: CellDiffOption` (`.none`, `.skip`)
