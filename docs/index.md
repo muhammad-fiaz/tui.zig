@@ -1,174 +1,87 @@
 ---
 layout: home
+title: Native Terminal User Interfaces for Zig
+description: tui.zig is a production-ready terminal user interface library written cleanly in Zig 0.17.0+ with double-buffered diff rendering, explicit allocators, OKLCH Color palettes, 40+ widgets, and pure Zig media viewers.
+keywords: zig, zig 0.17.0, tui.zig, terminal ui, zig tui framework, OKLCH oklch, cross-platform terminal, custom widgets
 
 hero:
-  name: TUI.zig
-  text: Modern Terminal UI Framework
-  tagline: Build beautiful, performant terminal applications with Zig
-  image:
-    src: /logo.svg
-    alt: TUI.zig
+  name: tui.zig
+  text: Native Terminal UIs in Pure Zig
+  tagline: Double-buffered diff rendering, explicit allocators, constraint layouts, OKLCH Color palettes, 40+ composable widgets, i18n, and native media viewers built for Zig 0.17.0+.
   actions:
     - theme: brand
       text: Get Started
-      link: /guide/getting-started
+      link: /guides/getting-started
     - theme: alt
-      text: View on GitHub
-      link: https://github.com/muhammad-fiaz/tui.zig
+      text: Explore Widgets & Examples
+      link: /examples/
+    - theme: alt
+      text: API Reference
+      link: /api/
 
 features:
-  - icon: 🎨
-    title: 36+ Widgets
-    details: Complete widget library including forms, navigation, feedback, and data display components
-  
   - icon: ⚡
-    title: High Performance
-    details: Diff-based rendering, double buffering, and 60 FPS target for smooth animations
-  
-  - icon: 🎭
-    title: 30+ Animations
-    details: Comprehensive easing functions including bounce, elastic, and back animations
-  
+    title: Zero Steady-State Frame Allocations
+    details: Double-buffered cell grids and capacity-retaining scratch arenas render interactive interfaces smoothly without heap churn between redraws.
   - icon: 📐
-    title: 8 Layout Systems
-    details: Flex, Grid, Stack, Absolute positioning and more for any design
-  
+    title: Constraint Solver & Responsive Splits
+    details: Mix fixed lengths, percentages, ratios, min/max bounds, weighted fills, flex spacing, and responsive breakpoints with zero hidden allocations.
+  - icon: 🖥️
+    title: Native Cross-Platform Backends
+    details: Uses Win32 Console APIs on Windows and native POSIX termios/poll/TIOCGWINSZ/SIGWINCH on Linux, macOS, and BSD (32-bit & 64-bit), plus headless memory rendering.
   - icon: 🎨
-    title: 6 Built-in Themes
-    details: Default, Dark, Light, Nord, Dracula, and Gruvbox themes ready to use
-  
-  - icon: 🖼️
-    title: Image Support
-    details: Kitty, iTerm2, Sixel protocols with ASCII fallback
-  
-  - icon: 🌍
-    title: Cross-Platform
-    details: Linux, macOS, Windows with full Unicode and CJK support
-  
-  - icon: 🔒
-    title: Type-Safe
-    details: Pure Zig implementation with zero-cost abstractions
-  
+    title: OKLCH Color & 17 Themes
+    details: Built-in TrueColor RGB/HSL/HSV/Hex/OKLCH colors, official OKLCH Color color families, perceptual ANSI-256/16 degradation, and 17 built-in theme presets.
+  - icon: 🧩
+    title: 40+ Widgets, App Shell Layouts & Media
+    details: Panels, Navbar, Left/Right RTL Sidebar, DropdownMenu, StatusBar, Markdown, Tables, Pie/Area/Step Charts, Heatmaps, Log/Diff Viewers, TerminalView, Custom Fonts, and Locale i18n.
   - icon: 🧪
-    title: Fully Tested
-    details: Comprehensive test coverage for all components
+    title: Deterministic Headless Verification
+    details: Inject synthetic key, mouse, paste, and resize events and inspect screen snapshots or cursor state directly inside std.testing or --headless CI binaries.
 ---
 
 ## Quick Example
 
 ```zig
+const std = @import("std");
 const tui = @import("tui");
 
-pub fn main() !void {
-    var app = try tui.App.init(.{});
-    defer app.deinit();
+const State = struct {
+    progress: f64 = 0.65,
+};
 
-    var widget = MyWidget{};
-    try app.setRoot(&widget);
-    try app.run();
+fn render(state: *State, ui: *tui.Ui) !void {
+    ui.fillThemeSurface();
+    const layout = ui.rows(3, .{ .{ .length = 1 }, .{ .fill = 1 }, .{ .length = 1 } }, .{});
+
+    var hdr = layout[0];
+    hdr.header(.{ .title = "tui.zig", .subtitle = "Overview", .right = "v" ++ tui.version }, hdr.area);
+
+    var body = layout[1].margin(tui.Margin.uniform(1));
+    try body.panel(.{ .title = "Status", .focused = true, .padding = tui.Padding.uniform(1) }, body.area, state, struct {
+        fn draw(st: *State, p: *tui.Ui) !void {
+            try p.paragraph(.{
+                .raw = "Declarative flat helpers or structured widgets over the exact same double-buffered cell grid.",
+                .wrap = .word,
+            }, null);
+            p.space(1);
+            try p.gauge(.{ .ratio = st.progress, .label = "Build 65%" }, null);
+        }
+    }.draw);
+
+    var ft = layout[2];
+    ft.statusBar(.{
+        .left = &.{.{ .text = "READY", .badge = true }},
+        .right = &.{.{ .text = "q / Esc Quit" }},
+    }, ft.area);
 }
 
-const MyWidget = struct {
-    count: i32 = 0,
+pub fn main(init: std.process.Init) !void {
+    var app = try tui.init(init.gpa, .{ .io = init.io });
+    defer app.deinit();
 
-    pub fn render(self: *MyWidget, ctx: *tui.RenderContext) void {
-        var screen = ctx.getSubScreen();
-        
-        var buf: [32]u8 = undefined;
-        const text = std.fmt.bufPrint(&buf, "Count: {d}", .{self.count}) catch "?";
-        
-        screen.moveCursor(10, 10);
-        screen.setStyle(tui.Style.default.bold().setFg(tui.Color.cyan));
-        screen.putString(text);
-    }
-
-    pub fn handleEvent(self: *MyWidget, event: tui.Event) tui.EventResult {
-        if (event == .key) {
-            switch (event.key.key) {
-                .up => {
-                    self.count += 1;
-                    return .needs_redraw;
-                },
-                .down => {
-                    self.count -= 1;
-                    return .needs_redraw;
-                },
-                else => {},
-            }
-        }
-        return .ignored;
-    }
-};
+    var state = State{};
+    try app.enter();
+    try app.run(&state, .{ .render = render });
+}
 ```
-
-## Features at a Glance
-
-### Complete Widget Library
-- **Forms**: InputField, TextArea, Checkbox, RadioGroup, Switch, Slider
-- **Navigation**: Navbar, Sidebar, Breadcrumb, Tabs, Menu, Pagination
-- **Feedback**: Alert, Toast, Modal, Progress, Spinner, Skeleton
-- **Display**: Text, Badge, Card, Table, ListView, TreeView, Image
-- **Layout**: Grid, Accordion, SplitView, ScrollView, Separator
-
-### Advanced Animation System
-- 30+ easing functions (Linear, Quad, Cubic, Sine, Expo, Circ, Back, Elastic, Bounce)
-- Generic Animation&lt;T&gt; for any type
-- Loop and alternate modes
-- Animation groups and timers
-
-### Flexible Layout Engine
-- FlexRow/FlexColumn for responsive layouts
-- Grid for structured designs
-- Stack for overlays
-- Absolute positioning
-- Box model with padding/margin
-
-### Rich Styling
-- True color (24-bit RGB)
-- 256-color palette
-- 16 ANSI colors
-- Bold, italic, underline, dim, reverse
-- 6 built-in themes
-
-## Why TUI.zig?
-
-- **Production Ready**: 36 widgets, comprehensive features, full test coverage
-- **High Performance**: Diff-based rendering, minimal allocations, 60 FPS
-- **Developer Friendly**: Simple API, type-safe, composable
-- **Cross-Platform**: Linux, macOS, Windows support
-- **Zero Dependencies**: Pure Zig implementation
-- **Well Documented**: Complete guides and API reference
-
-## Installation
-
-### Stable Release (Recommended)
-
-```bash
-zig fetch --save "https://github.com/muhammad-fiaz/tui.zig/archive/refs/tags/0.0.2.tar.gz"
-```
-
-### Development (Latest)
-
-```bash
-zig fetch --save git+https://github.com/muhammad-fiaz/tui.zig.git
-```
-
-Add to your `build.zig`:
-
-```zig
-const tui_dep = b.dependency("tui", .{
-    .target = target,
-    .optimize = optimize,
-});
-exe.root_module.addImport("tui", tui_dep.module("tui"));
-```
-
-## Community
-
-- [GitHub Repository](https://github.com/muhammad-fiaz/tui.zig)
-- [Issue Tracker](https://github.com/muhammad-fiaz/tui.zig/issues)
-- [Discussions](https://github.com/muhammad-fiaz/tui.zig/discussions)
-
-## License
-
-MIT License - see [LICENSE](https://github.com/muhammad-fiaz/tui.zig/blob/main/LICENSE)

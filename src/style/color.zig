@@ -1,383 +1,341 @@
-//! Color system for TUI.zig
+//! Terminal color abstraction backed by `tint`.
 //!
-//! Supports:
-//! - Basic 16 colors
-//! - 256 color palette
-//! - True color (24-bit RGB)
-//! - Named colors
-//! - Color blending and manipulation
+//! Colors are plain values with no heap ownership. `.inherit` leaves an existing
+//! cell color intact, `.reset` restores the terminal's default color, and all
+//! concrete color spaces delegate conversion, perceptual metrics, mixing, and
+//! capability downgrading to `tint`.
 
 const std = @import("std");
+const tint = @import("tint");
+const testing = std.testing;
 
-/// A color that can be rendered in the terminal
+/// Terminal color capability level supported by the output backend.
+pub const Capability = tint.ansi.Capability;
+/// Color layer target (foreground, background, or underline).
+pub const Layer = tint.ansi.Layer;
+/// 16-color ANSI palette enum plus `.default`.
+pub const Ansi4 = tint.color.Ansi4;
+/// Indexed 256-color entry (`0..255`).
+pub const Ansi256 = tint.color.Ansi256;
+/// 24-bit sRGB color triple (`0..255` per channel).
+pub const Rgb = tint.color.Rgb;
+/// 24-bit hexadecimal color value (`0xRRGGBB`).
+pub const Hex = tint.color.Hex;
+/// HSL color space (`h: 0..359`, `s: 0..100`, `l: 0..100`).
+pub const Hsl = tint.color.Hsl;
+/// HSV color space (`h: 0..359`, `s: 0..100`, `v: 0..100`).
+pub const Hsv = tint.color.Hsv;
+/// Perceptual OKLab color space.
+pub const Oklab = tint.color.Oklab;
+/// Cylindrical perceptual OKLCH color space (`l: 0..1`, `c: chroma`, `h: 0..360`).
+pub const Oklch = tint.color.Oklch;
+/// Color interpolation space.
+pub const Space = tint.color.Space;
+/// Hue circle traversal mode for `mixHue`.
+pub const HuePath = tint.color.HuePath;
+
+/// Terminal color value supporting inheritance, terminal default reset, ANSI
+/// 4-bit, 256-color indexed, truecolor RGB/Hex, HSL, HSV, and named CSS colors.
 pub const Color = union(enum) {
-    /// Default terminal color
-    default,
+    /// Leaves the underlying color unchanged when patching or compositing.
+    inherit,
+    /// Concrete color value represented by `tint.color.Color`.
+    tint: tint.color.Color,
 
-    /// Basic 16-color palette (0-15)
-    basic: Basic,
+    /// Restores the terminal's own default foreground, background, or underline color.
+    pub const reset: Color = .{ .tint = tint.color.ansi4.default };
 
-    /// 256-color palette (0-255)
-    palette: u8,
+    /// Standard ANSI black (SGR 30/40).
+    pub const black: Color = .{ .tint = tint.color.ansi4.black };
+    /// Standard ANSI red (SGR 31/41).
+    pub const red: Color = .{ .tint = tint.color.ansi4.red };
+    /// Standard ANSI green (SGR 32/42).
+    pub const green: Color = .{ .tint = tint.color.ansi4.green };
+    /// Standard ANSI yellow (SGR 33/43).
+    pub const yellow: Color = .{ .tint = tint.color.ansi4.yellow };
+    /// Standard ANSI blue (SGR 34/44).
+    pub const blue: Color = .{ .tint = tint.color.ansi4.blue };
+    /// Standard ANSI magenta (SGR 35/45).
+    pub const magenta: Color = .{ .tint = tint.color.ansi4.magenta };
+    /// Standard ANSI cyan (SGR 36/46).
+    pub const cyan: Color = .{ .tint = tint.color.ansi4.cyan };
+    /// Standard ANSI white / light gray (SGR 37/47).
+    pub const white: Color = .{ .tint = tint.color.ansi4.white };
 
-    /// True color RGB (24-bit)
-    rgb: RGB,
+    /// Standard ANSI bright black / dark gray (SGR 90/100).
+    pub const bright_black: Color = .{ .tint = tint.color.ansi4.brightBlack };
+    /// Standard ANSI bright red (SGR 91/101).
+    pub const bright_red: Color = .{ .tint = tint.color.ansi4.brightRed };
+    /// Standard ANSI bright green (SGR 92/102).
+    pub const bright_green: Color = .{ .tint = tint.color.ansi4.brightGreen };
+    /// Standard ANSI bright yellow (SGR 93/103).
+    pub const bright_yellow: Color = .{ .tint = tint.color.ansi4.brightYellow };
+    /// Standard ANSI bright blue (SGR 94/104).
+    pub const bright_blue: Color = .{ .tint = tint.color.ansi4.brightBlue };
+    /// Standard ANSI bright magenta (SGR 95/105).
+    pub const bright_magenta: Color = .{ .tint = tint.color.ansi4.brightMagenta };
+    /// Standard ANSI bright cyan (SGR 96/106).
+    pub const bright_cyan: Color = .{ .tint = tint.color.ansi4.brightCyan };
+    /// Standard ANSI bright white (SGR 97/107).
+    pub const bright_white: Color = .{ .tint = tint.color.ansi4.brightWhite };
 
-    // Convenience constants
-    pub const black = Color{ .basic = .black };
-    pub const red = Color{ .basic = .red };
-    pub const green = Color{ .basic = .green };
-    pub const yellow = Color{ .basic = .yellow };
-    pub const blue = Color{ .basic = .blue };
-    pub const magenta = Color{ .basic = .magenta };
-    pub const cyan = Color{ .basic = .cyan };
-    pub const white = Color{ .basic = .white };
-    pub const gray = Color{ .basic = .gray };
-    pub const dark_gray = Color{ .basic = .bright_black };
-    pub const light_red = Color{ .basic = .bright_red };
-    pub const light_green = Color{ .basic = .bright_green };
-    pub const light_yellow = Color{ .basic = .bright_yellow };
-    pub const light_blue = Color{ .basic = .bright_blue };
-    pub const light_magenta = Color{ .basic = .bright_magenta };
-    pub const light_cyan = Color{ .basic = .bright_cyan };
-    pub const light_white = Color{ .basic = .bright_white };
+    /// Alias for `white` (ANSI palette gray).
+    pub const gray: Color = white;
+    /// Alias for `bright_black` (ANSI palette dark gray).
+    pub const dark_gray: Color = bright_black;
+    /// Alias for `bright_red`.
+    pub const light_red: Color = bright_red;
+    /// Alias for `bright_green`.
+    pub const light_green: Color = bright_green;
+    /// Alias for `bright_yellow`.
+    pub const light_yellow: Color = bright_yellow;
+    /// Alias for `bright_blue`.
+    pub const light_blue: Color = bright_blue;
+    /// Alias for `bright_magenta`.
+    pub const light_magenta: Color = bright_magenta;
+    /// Alias for `bright_cyan`.
+    pub const light_cyan: Color = bright_cyan;
 
-    /// Basic 16-color palette
-    pub const Basic = enum(u8) {
-        black = 0,
-        red = 1,
-        green = 2,
-        yellow = 3,
-        blue = 4,
-        magenta = 5,
-        cyan = 6,
-        white = 7,
-        bright_black = 8,
-        bright_red = 9,
-        bright_green = 10,
-        bright_yellow = 11,
-        bright_blue = 12,
-        bright_magenta = 13,
-        bright_cyan = 14,
-        bright_white = 15,
+    /// Named CSS/X11 truecolor constants delegated from `tint.color`.
+    pub const coral: Color = .{ .tint = tint.color.coral };
+    pub const crimson: Color = .{ .tint = tint.color.crimson };
+    pub const gold: Color = .{ .tint = tint.color.gold };
+    pub const orange: Color = .{ .tint = tint.color.orange };
+    pub const orange_red: Color = .{ .tint = tint.color.orangeRed };
+    pub const pink: Color = .{ .tint = tint.color.pink };
+    pub const hot_pink: Color = .{ .tint = tint.color.hotPink };
+    pub const deep_pink: Color = .{ .tint = tint.color.deepPink };
+    pub const purple: Color = .{ .tint = tint.color.purple };
+    pub const rebecca_purple: Color = .{ .tint = tint.color.rebeccaPurple };
+    pub const indigo: Color = .{ .tint = tint.color.indigo };
+    pub const violet: Color = .{ .tint = tint.color.violet };
+    pub const orchid: Color = .{ .tint = tint.color.orchid };
+    pub const plum: Color = .{ .tint = tint.color.plum };
+    pub const teal: Color = .{ .tint = tint.color.teal };
+    pub const navy: Color = .{ .tint = tint.color.navy };
+    pub const royal_blue: Color = .{ .tint = tint.color.royalBlue };
+    pub const sky_blue: Color = .{ .tint = tint.color.skyBlue };
+    pub const deep_sky_blue: Color = .{ .tint = tint.color.deepSkyBlue };
+    pub const dodger_blue: Color = .{ .tint = tint.color.dodgerBlue };
+    pub const steel_blue: Color = .{ .tint = tint.color.steelBlue };
+    pub const cornflower_blue: Color = .{ .tint = tint.color.cornflowerBlue };
+    pub const slate_blue: Color = .{ .tint = tint.color.slateBlue };
+    pub const slate_gray: Color = .{ .tint = tint.color.slateGray };
+    pub const turquoise: Color = .{ .tint = tint.color.turquoise };
+    pub const aquamarine: Color = .{ .tint = tint.color.aquamarine };
+    pub const sea_green: Color = .{ .tint = tint.color.seaGreen };
+    pub const spring_green: Color = .{ .tint = tint.color.springGreen };
+    pub const forest_green: Color = .{ .tint = tint.color.forestGreen };
+    pub const lime: Color = .{ .tint = tint.color.lime };
+    pub const tomato: Color = .{ .tint = tint.color.tomato };
+    pub const salmon: Color = .{ .tint = tint.color.salmon };
+    pub const silver: Color = .{ .tint = tint.color.silver };
+    pub const lavender: Color = .{ .tint = tint.color.lavender };
+    pub const khaki: Color = .{ .tint = tint.color.khaki };
+    pub const olive: Color = .{ .tint = tint.color.olive };
+    pub const maroon: Color = .{ .tint = tint.color.maroon };
+    pub const chocolate: Color = .{ .tint = tint.color.chocolate };
+    pub const wheat: Color = .{ .tint = tint.color.wheat };
 
-        // Aliases
-        pub const gray = Basic.bright_black;
-        pub const grey = Basic.bright_black;
-    };
-
-    /// RGB color value
-    pub const RGB = struct {
-        r: u8,
-        g: u8,
-        b: u8,
-
-        /// Create an RGB color from hex value (e.g., 0xFF5733)
-        pub fn fromHex(hex_value: u24) RGB {
-            return .{
-                .r = @truncate((hex_value >> 16) & 0xFF),
-                .g = @truncate((hex_value >> 8) & 0xFF),
-                .b = @truncate(hex_value & 0xFF),
-            };
-        }
-
-        /// Convert to hex value
-        pub fn toHex(self: RGB) u24 {
-            return (@as(u24, self.r) << 16) | (@as(u24, self.g) << 8) | @as(u24, self.b);
-        }
-
-        /// Blend two colors together
-        pub fn blend(self: RGB, other: RGB, factor: f32) RGB {
-            const f = std.math.clamp(factor, 0.0, 1.0);
-            const inv = 1.0 - f;
-            return .{
-                .r = @intFromFloat(@as(f32, @floatFromInt(self.r)) * inv + @as(f32, @floatFromInt(other.r)) * f),
-                .g = @intFromFloat(@as(f32, @floatFromInt(self.g)) * inv + @as(f32, @floatFromInt(other.g)) * f),
-                .b = @intFromFloat(@as(f32, @floatFromInt(self.b)) * inv + @as(f32, @floatFromInt(other.b)) * f),
-            };
-        }
-
-        /// Lighten the color by a percentage (0.0 - 1.0)
-        pub fn lighten(self: RGB, amount: f32) RGB {
-            return self.blend(.{ .r = 255, .g = 255, .b = 255 }, amount);
-        }
-
-        /// Darken the color by a percentage (0.0 - 1.0)
-        pub fn darken(self: RGB, amount: f32) RGB {
-            return self.blend(.{ .r = 0, .g = 0, .b = 0 }, amount);
-        }
-
-        /// Get the grayscale equivalent
-        pub fn grayscale(self: RGB) RGB {
-            const gray_val: u8 = @intFromFloat(0.299 * @as(f32, @floatFromInt(self.r)) +
-                0.587 * @as(f32, @floatFromInt(self.g)) +
-                0.114 * @as(f32, @floatFromInt(self.b)));
-            return .{ .r = gray_val, .g = gray_val, .b = gray_val };
-        }
-
-        /// Calculate luminance (0.0 - 1.0)
-        pub fn luminance(self: RGB) f32 {
-            const r = @as(f32, @floatFromInt(self.r)) / 255.0;
-            const g = @as(f32, @floatFromInt(self.g)) / 255.0;
-            const b = @as(f32, @floatFromInt(self.b)) / 255.0;
-            return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-        }
-
-        /// Check if this is a light color
-        pub fn isLight(self: RGB) bool {
-            return self.luminance() > 0.5;
-        }
-
-        /// Get a contrasting color (black or white)
-        pub fn contrastingColor(self: RGB) RGB {
-            return if (self.isLight()) .{ .r = 0, .g = 0, .b = 0 } else .{ .r = 255, .g = 255, .b = 255 };
-        }
-    };
-
-    /// Create a color from RGB values
-    pub fn fromRGB(r: u8, g: u8, b: u8) Color {
-        return .{ .rgb = .{ .r = r, .g = g, .b = b } };
+    /// Constructs a 24-bit RGB color.
+    pub fn rgb(r: u8, g: u8, b: u8) Color {
+        return .{ .tint = tint.color.rgb(r, g, b) };
     }
 
-    /// Create a color from a hex value
+    /// Constructs a 24-bit color from a `0xRRGGBB` integer.
     pub fn hex(value: u24) Color {
-        return .{ .rgb = RGB.fromHex(value) };
+        return .{ .tint = tint.color.hex(value) };
     }
 
-    /// Create a palette color
-    pub fn palette256(index: u8) Color {
-        return .{ .palette = index };
+    /// Constructs an HSL color (`h` wraps at 360; `s` and `l` are in `0..100`).
+    pub fn hsl(h: u16, s: u8, l: u8) Color {
+        return .{ .tint = tint.color.hsl(h, s, l) };
     }
 
-    /// Check if this is the default color
-    pub fn isDefault(self: Color) bool {
-        return self == .default;
+    /// Constructs an HSV color (`h` wraps at 360; `s` and `v` are in `0..100`).
+    pub fn hsv(h: u16, s: u8, v: u8) Color {
+        return .{ .tint = tint.color.hsv(h, s, v) };
     }
 
-    /// Convert to ANSI escape sequence for foreground
-    pub fn toFgAnsi(self: Color, writer: anytype) !void {
-        switch (self) {
-            .default => try writer.writeAll("\x1b[39m"),
-            .basic => |b| {
-                const code: u8 = if (@intFromEnum(b) >= 8)
-                    90 + @intFromEnum(b) - 8
-                else
-                    30 + @intFromEnum(b);
-                try writer.print("\x1b[{d}m", .{code});
-            },
-            .palette => |p| try writer.print("\x1b[38;5;{d}m", .{p}),
-            .rgb => |c| try writer.print("\x1b[38;2;{d};{d};{d}m", .{ c.r, c.g, c.b }),
-        }
+    /// Constructs a 24-bit TrueColor converted from CSS Color 4 OKLCH (`l: 0..1`, `c >= 0`, `h: 0..360`).
+    pub fn oklch(l: f64, c: f64, h: f64) Color {
+        const srgb = (Oklch{ .l = l, .c = c, .h = h }).toOklab().toRgb();
+        return rgb(srgb.r, srgb.g, srgb.b);
     }
 
-    /// Convert to ANSI escape sequence for background
-    pub fn toBgAnsi(self: Color, writer: anytype) !void {
-        switch (self) {
-            .default => try writer.writeAll("\x1b[49m"),
-            .basic => |b| {
-                const code: u8 = if (@intFromEnum(b) >= 8)
-                    100 + @intFromEnum(b) - 8
-                else
-                    40 + @intFromEnum(b);
-                try writer.print("\x1b[{d}m", .{code});
-            },
-            .palette => |p| try writer.print("\x1b[48;5;{d}m", .{p}),
-            .rgb => |c| try writer.print("\x1b[48;2;{d};{d};{d}m", .{ c.r, c.g, c.b }),
-        }
+    /// Constructs an indexed 256-palette color (`0..255`).
+    pub fn indexed(index: u8) Color {
+        return .{ .tint = tint.color.ansi256.index(index) };
     }
 
-    /// Blend this color with another
-    pub fn blend(self: Color, other: Color, factor: f32) Color {
-        const self_rgb = self.toRGB() orelse return other;
-        const other_rgb = other.toRGB() orelse return self;
-        return .{ .rgb = self_rgb.blend(other_rgb, factor) };
+    /// Alias for `indexed`.
+    pub fn ansi256(index: u8) Color {
+        return indexed(index);
     }
 
-    /// Convert to RGB if possible
-    pub fn toRGB(self: Color) ?RGB {
+    /// Constructs a 4-bit ANSI color.
+    pub fn ansi(a: Ansi4) Color {
+        return .{ .tint = .{ .ansi4 = a } };
+    }
+
+    /// Wraps an existing `tint.color.Color`.
+    pub fn fromTint(c: tint.color.Color) Color {
+        return .{ .tint = c };
+    }
+
+    /// Parses a CSS/X11 color name or hex string (`#RGB`, `#RRGGBB`, `0xRRGGBB`).
+    /// Also accepts `"inherit"` and `"reset"` / `"default"`.
+    pub fn parse(text: []const u8) ?Color {
+        if (std.ascii.eqlIgnoreCase(text, "inherit")) return .inherit;
+        if (std.ascii.eqlIgnoreCase(text, "reset") or std.ascii.eqlIgnoreCase(text, "default")) return .reset;
+        if (tint.color.parse(text)) |c| return .{ .tint = c };
+        return null;
+    }
+
+    /// Returns the underlying `tint.color.Color`, or `null` when `.inherit`.
+    pub fn toTint(self: Color) ?tint.color.Color {
         return switch (self) {
-            .default => null,
-            .basic => |b| basicToRGB(b),
-            .palette => |p| paletteToRGB(p),
-            .rgb => |c| c,
+            .inherit => null,
+            .tint => |c| c,
         };
     }
 
-    fn basicToRGB(basic: Basic) RGB {
-        return switch (basic) {
-            .black => .{ .r = 0, .g = 0, .b = 0 },
-            .red => .{ .r = 128, .g = 0, .b = 0 },
-            .green => .{ .r = 0, .g = 128, .b = 0 },
-            .yellow => .{ .r = 128, .g = 128, .b = 0 },
-            .blue => .{ .r = 0, .g = 0, .b = 128 },
-            .magenta => .{ .r = 128, .g = 0, .b = 128 },
-            .cyan => .{ .r = 0, .g = 128, .b = 128 },
-            .white => .{ .r = 192, .g = 192, .b = 192 },
-            .bright_black => .{ .r = 128, .g = 128, .b = 128 },
-            .bright_red => .{ .r = 255, .g = 0, .b = 0 },
-            .bright_green => .{ .r = 0, .g = 255, .b = 0 },
-            .bright_yellow => .{ .r = 255, .g = 255, .b = 0 },
-            .bright_blue => .{ .r = 0, .g = 0, .b = 255 },
-            .bright_magenta => .{ .r = 255, .g = 0, .b = 255 },
-            .bright_cyan => .{ .r = 0, .g = 255, .b = 255 },
-            .bright_white => .{ .r = 255, .g = 255, .b = 255 },
+    /// True if this color is `.inherit`.
+    pub fn isInherit(self: Color) bool {
+        return self == .inherit;
+    }
+
+    /// True if this color explicitly resets to the terminal default.
+    pub fn isReset(self: Color) bool {
+        return switch (self) {
+            .tint => |c| switch (c) {
+                .ansi4 => |a| a == .default,
+                else => false,
+            },
+            .inherit => false,
         };
     }
 
-    fn paletteToRGB(index: u8) RGB {
-        // Standard colors (0-15)
-        if (index < 16) {
-            return basicToRGB(@enumFromInt(index));
-        }
+    /// Downgrades this color to the closest representation supported by `capability`.
+    /// `.inherit` remains `.inherit`.
+    pub fn downgrade(self: Color, capability: Capability) Color {
+        return switch (self) {
+            .inherit => .inherit,
+            .tint => |c| switch (c) {
+                .ansi4 => |a| if (a == .default)
+                    self
+                else switch (capability) {
+                    .none => .reset,
+                    .ansi16, .ansi256, .trueColor => self,
+                },
+                .ansi256 => switch (capability) {
+                    .none => .reset,
+                    .ansi16 => .{ .tint = .{ .ansi4 = c.nearestAnsi16() } },
+                    .ansi256, .trueColor => self,
+                },
+                .rgb, .hex, .hsl, .hsv => .{ .tint = c.downgrade(capability) },
+            },
+        };
+    }
 
-        // 216-color cube (16-231)
-        if (index < 232) {
-            const idx = index - 16;
-            const r_idx = idx / 36;
-            const g_idx = (idx / 6) % 6;
-            const b_idx = idx % 6;
-            return .{
-                .r = if (r_idx == 0) 0 else @as(u8, @intCast(55 + r_idx * 40)),
-                .g = if (g_idx == 0) 0 else @as(u8, @intCast(55 + g_idx * 40)),
-                .b = if (b_idx == 0) 0 else @as(u8, @intCast(55 + b_idx * 40)),
-            };
-        }
+    /// Renders an ANSI SGR sequence for `layer` at `capability`.
+    /// Returns `null` when `.inherit`.
+    pub fn sequence(self: Color, layer: Layer, capability: Capability) ?tint.ansi.Sequence {
+        const concrete = self.downgrade(capability).toTint() orelse return null;
+        return concrete.sequence(layer);
+    }
 
-        // Grayscale (232-255)
-        const gray_val: u8 = @intCast((index - 232) * 10 + 8);
-        return .{ .r = gray_val, .g = gray_val, .b = gray_val };
+    /// Converts concrete colors to sRGB; returns `null` for `.inherit`.
+    pub fn toRgb(self: Color) ?Rgb {
+        const concrete = self.toTint() orelse return null;
+        return concrete.toRgb();
+    }
+
+    /// WCAG relative luminance (`0.0..1.0`), or `null` for `.inherit`.
+    pub fn luminance(self: Color) ?f64 {
+        const concrete = self.toTint() orelse return null;
+        return concrete.luminance();
+    }
+
+    /// WCAG contrast ratio (`1.0..21.0`) between two concrete colors.
+    pub fn contrastRatio(self: Color, other: Color) ?f64 {
+        const a = self.toTint() orelse return null;
+        const b = other.toTint() orelse return null;
+        return a.contrastRatio(b);
+    }
+
+    /// Blends towards `other` in sRGB (`ratio` clamped to `0.0..1.0`).
+    pub fn mix(self: Color, other: Color, ratio: f64) Color {
+        const a = self.toTint() orelse return other;
+        const b = other.toTint() orelse return self;
+        return .{ .tint = a.mix(b, ratio) };
+    }
+
+    /// Blends towards `other` in the specified `Space`.
+    pub fn mixIn(self: Color, other: Color, ratio: f64, space: Space) Color {
+        const a = self.toTint() orelse return other;
+        const b = other.toTint() orelse return self;
+        return .{ .tint = a.mixIn(b, ratio, space) };
+    }
+
+    /// Increases HSL lightness by `amount` (`0.0..1.0`).
+    pub fn lighten(self: Color, amount: f64) Color {
+        const concrete = self.toTint() orelse return .inherit;
+        return .{ .tint = concrete.lighten(amount) };
+    }
+
+    /// Decreases HSL lightness by `amount` (`0.0..1.0`).
+    pub fn darken(self: Color, amount: f64) Color {
+        const concrete = self.toTint() orelse return .inherit;
+        return .{ .tint = concrete.darken(amount) };
+    }
+
+    /// Equality check across color variants.
+    pub fn eql(a: Color, b: Color) bool {
+        return std.meta.eql(a, b);
     }
 };
 
-// ============================================
-// Named Color Constants
-// ============================================
+test "color constants and constructors resolve cleanly" {
+    const c1: Color = .red;
+    const c2: Color = .rgb(255, 100, 20);
+    const c3: Color = .hex(0x7C3AED);
+    const c4: Color = .indexed(196);
+    const c5: Color = .inherit;
+    const c6: Color = .reset;
 
-pub const Colors = struct {
-    // Basic colors
-    pub const black = Color{ .basic = .black };
-    pub const red = Color{ .basic = .red };
-    pub const green = Color{ .basic = .green };
-    pub const yellow = Color{ .basic = .yellow };
-    pub const blue = Color{ .basic = .blue };
-    pub const magenta = Color{ .basic = .magenta };
-    pub const cyan = Color{ .basic = .cyan };
-    pub const white = Color{ .basic = .white };
-
-    // Bright colors
-    pub const bright_black = Color{ .basic = .bright_black };
-    pub const bright_red = Color{ .basic = .bright_red };
-    pub const bright_green = Color{ .basic = .bright_green };
-    pub const bright_yellow = Color{ .basic = .bright_yellow };
-    pub const bright_blue = Color{ .basic = .bright_blue };
-    pub const bright_magenta = Color{ .basic = .bright_magenta };
-    pub const bright_cyan = Color{ .basic = .bright_cyan };
-    pub const bright_white = Color{ .basic = .bright_white };
-
-    // Aliases
-    pub const gray = bright_black;
-    pub const grey = bright_black;
-    pub const default = Color.default;
-
-    // CSS-like named colors (true color)
-    pub const alice_blue = Color.hex(0xF0F8FF);
-    pub const antique_white = Color.hex(0xFAEBD7);
-    pub const aqua = Color.hex(0x00FFFF);
-    pub const aquamarine = Color.hex(0x7FFFD4);
-    pub const azure = Color.hex(0xF0FFFF);
-    pub const beige = Color.hex(0xF5F5DC);
-    pub const coral = Color.hex(0xFF7F50);
-    pub const crimson = Color.hex(0xDC143C);
-    pub const dark_blue = Color.hex(0x00008B);
-    pub const dark_cyan = Color.hex(0x008B8B);
-    pub const dark_gray = Color.hex(0xA9A9A9);
-    pub const dark_green = Color.hex(0x006400);
-    pub const dark_magenta = Color.hex(0x8B008B);
-    pub const dark_orange = Color.hex(0xFF8C00);
-    pub const dark_red = Color.hex(0x8B0000);
-    pub const deep_pink = Color.hex(0xFF1493);
-    pub const deep_sky_blue = Color.hex(0x00BFFF);
-    pub const dodger_blue = Color.hex(0x1E90FF);
-    pub const fire_brick = Color.hex(0xB22222);
-    pub const forest_green = Color.hex(0x228B22);
-    pub const gold = Color.hex(0xFFD700);
-    pub const golden_rod = Color.hex(0xDAA520);
-    pub const hot_pink = Color.hex(0xFF69B4);
-    pub const indian_red = Color.hex(0xCD5C5C);
-    pub const indigo = Color.hex(0x4B0082);
-    pub const ivory = Color.hex(0xFFFFF0);
-    pub const lavender = Color.hex(0xE6E6FA);
-    pub const lemon_chiffon = Color.hex(0xFFFACD);
-    pub const light_blue = Color.hex(0xADD8E6);
-    pub const light_coral = Color.hex(0xF08080);
-    pub const light_cyan = Color.hex(0xE0FFFF);
-    pub const light_gray = Color.hex(0xD3D3D3);
-    pub const light_green = Color.hex(0x90EE90);
-    pub const light_pink = Color.hex(0xFFB6C1);
-    pub const lime = Color.hex(0x00FF00);
-    pub const lime_green = Color.hex(0x32CD32);
-    pub const maroon = Color.hex(0x800000);
-    pub const medium_blue = Color.hex(0x0000CD);
-    pub const medium_purple = Color.hex(0x9370DB);
-    pub const midnight_blue = Color.hex(0x191970);
-    pub const mint_cream = Color.hex(0xF5FFFA);
-    pub const navy = Color.hex(0x000080);
-    pub const olive = Color.hex(0x808000);
-    pub const orange = Color.hex(0xFFA500);
-    pub const orange_red = Color.hex(0xFF4500);
-    pub const orchid = Color.hex(0xDA70D6);
-    pub const pale_green = Color.hex(0x98FB98);
-    pub const pale_violet_red = Color.hex(0xDB7093);
-    pub const peru = Color.hex(0xCD853F);
-    pub const pink = Color.hex(0xFFC0CB);
-    pub const plum = Color.hex(0xDDA0DD);
-    pub const purple = Color.hex(0x800080);
-    pub const rebecca_purple = Color.hex(0x663399);
-    pub const rosy_brown = Color.hex(0xBC8F8F);
-    pub const royal_blue = Color.hex(0x4169E1);
-    pub const salmon = Color.hex(0xFA8072);
-    pub const sea_green = Color.hex(0x2E8B57);
-    pub const sienna = Color.hex(0xA0522D);
-    pub const silver = Color.hex(0xC0C0C0);
-    pub const sky_blue = Color.hex(0x87CEEB);
-    pub const slate_blue = Color.hex(0x6A5ACD);
-    pub const slate_gray = Color.hex(0x708090);
-    pub const snow = Color.hex(0xFFFAFA);
-    pub const spring_green = Color.hex(0x00FF7F);
-    pub const steel_blue = Color.hex(0x4682B4);
-    pub const tan = Color.hex(0xD2B48C);
-    pub const teal = Color.hex(0x008080);
-    pub const thistle = Color.hex(0xD8BFD8);
-    pub const tomato = Color.hex(0xFF6347);
-    pub const turquoise = Color.hex(0x40E0D0);
-    pub const violet = Color.hex(0xEE82EE);
-    pub const wheat = Color.hex(0xF5DEB3);
-    pub const white_smoke = Color.hex(0xF5F5F5);
-    pub const yellow_green = Color.hex(0x9ACD32);
-};
-
-test "hex color parsing" {
-    const color = Color.hex(0xFF5733);
-    const c = color.rgb;
-    try std.testing.expectEqual(@as(u8, 0xFF), c.r);
-    try std.testing.expectEqual(@as(u8, 0x57), c.g);
-    try std.testing.expectEqual(@as(u8, 0x33), c.b);
+    try testing.expect(!c1.isInherit());
+    try testing.expect(c5.isInherit());
+    try testing.expect(c6.isReset());
+    try testing.expectEqualStrings("\x1b[31m", c1.sequence(.foreground, .trueColor).?.slice());
+    try testing.expectEqualStrings("\x1b[38;2;255;100;20m", c2.sequence(.foreground, .trueColor).?.slice());
+    try testing.expectEqualStrings("\x1b[38;2;124;58;237m", c3.sequence(.foreground, .trueColor).?.slice());
+    try testing.expectEqualStrings("\x1b[38;5;196m", c4.sequence(.foreground, .ansi256).?.slice());
+    try testing.expect(c5.sequence(.foreground, .trueColor) == null);
+    try testing.expectEqualStrings("\x1b[39m", c6.sequence(.foreground, .trueColor).?.slice());
 }
 
-test "color blending" {
-    const white = Color.RGB{ .r = 255, .g = 255, .b = 255 };
-    const black = Color.RGB{ .r = 0, .g = 0, .b = 0 };
-    const gray = white.blend(black, 0.5);
-    try std.testing.expect(gray.r > 120 and gray.r < 140);
-    try std.testing.expect(gray.g > 120 and gray.g < 140);
-    try std.testing.expect(gray.b > 120 and gray.b < 140);
+test "color downgrade and parse honor capability" {
+    const brand: Color = .rgb(255, 0, 0);
+    try testing.expectEqualStrings("\x1b[39m", brand.downgrade(.none).sequence(.foreground, .none).?.slice());
+    try testing.expectEqualStrings("\x1b[91m", brand.downgrade(.ansi16).sequence(.foreground, .ansi16).?.slice());
+    try testing.expect(std.mem.startsWith(u8, brand.downgrade(.ansi256).sequence(.foreground, .ansi256).?.slice(), "\x1b[38;5;"));
+
+    try testing.expectEqual(Color.inherit, Color.parse("inherit").?);
+    try testing.expectEqual(Color.reset, Color.parse("reset").?);
+    try testing.expect(Color.parse("#ff6600") != null);
+    try testing.expect(Color.parse("rebeccaPurple") != null);
+    try testing.expect(Color.parse("not-a-color") == null);
+
+    const oklch_c = Color.oklch(0.637, 0.237, 25.331);
+    const srgb = oklch_c.toRgb().?;
+    try testing.expect(srgb.r > 200 and srgb.g < 100 and srgb.b < 100);
 }
 
-test "luminance calculation" {
-    const white = Color.RGB{ .r = 255, .g = 255, .b = 255 };
-    const black = Color.RGB{ .r = 0, .g = 0, .b = 0 };
-    try std.testing.expect(white.luminance() > 0.9);
-    try std.testing.expect(black.luminance() < 0.1);
-    try std.testing.expect(white.isLight());
-    try std.testing.expect(!black.isLight());
+test "color metrics and mixing delegate to tint" {
+    const ratio = Color.bright_white.contrastRatio(.black).?;
+    try testing.expect(ratio > 20.0);
+    try testing.expect(Color.white.contrastRatio(.black).? > 8.0);
+    const mid = Color.rgb(0, 0, 0).mix(.rgb(255, 255, 255), 0.5).toRgb().?;
+    try testing.expectEqual(@as(u8, 128), mid.r);
 }

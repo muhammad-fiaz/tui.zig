@@ -1,244 +1,191 @@
-// Pagination widget for navigating through multiple pages of content.
-// Supports various display modes and customizable page sizes.
+//! Interactive `Pagination` bar widget (`◀ Prev  1  [2]  3  Next ▶`) with mouse & keyboard support.
 
 const std = @import("std");
-const widget = @import("widget.zig");
-const Style = @import("../style/style.zig").Style;
-const Color = @import("../style/color.zig").Color;
-const Event = @import("../event/events.zig").Event;
+const core_root = @import("../core/root.zig");
+const style_root = @import("../style/root.zig");
+const text_root = @import("../text/root.zig");
+const event_root = @import("../event/root.zig");
+const block_mod = @import("block.zig");
+const testing = std.testing;
 
-pub const PaginationMode = enum {
-    simple,
-    full,
-    compact,
-};
+pub const Rect = core_root.Rect;
+pub const Ui = core_root.Ui;
+pub const Block = block_mod.Block;
+pub const Event = event_root.Event;
 
+/// Interactive page control bar (`◀ Prev  [1]  2  3  Next ▶`) with sliding window, mouse, and keyboard navigation.
 pub const Pagination = struct {
-    current_page: usize = 1,
     total_pages: usize = 1,
-    mode: PaginationMode = .full,
-    base: widget.StatefulWidget = .{},
-    style: Style = Style.default,
-    on_change: ?*const fn (usize) void = null,
+    max_visible_pages: usize = 7,
+    focused: bool = true,
+    prev_label: []const u8 = "◀ Prev",
+    next_label: []const u8 = "Next ▶",
+    block: ?Block = null,
 
-    pub fn init(total_pages: usize) Pagination {
-        return .{ .total_pages = total_pages };
+    fn pageWindow(total: usize, current: usize, max_btns: usize) struct { start: usize, end: usize } {
+        const cap = @max(@as(usize, 1), @min(total, max_btns));
+        if (total <= cap) return .{ .start = 1, .end = total };
+        const half = cap / 2;
+        var start = if (current > half) current - half else 1;
+        var end = start + cap - 1;
+        if (end > total) {
+            end = total;
+            start = end - cap + 1;
+        }
+        return .{ .start = start, .end = end };
     }
 
-    pub fn withMode(self: Pagination, mode: PaginationMode) Pagination {
-        var result = self;
-        result.mode = mode;
-        return result;
-    }
+    pub fn handleEvent(self: Pagination, page: *usize, event: Event, area: Rect) bool {
+        const total = @max(@as(usize, 1), self.total_pages);
+        page.* = std.math.clamp(page.*, 1, total);
 
-    pub fn withOnChange(self: Pagination, callback: *const fn (usize) void) Pagination {
-        var result = self;
-        result.on_change = callback;
-        return result;
-    }
+        switch (event) {
+            .mouse => |m| {
+                const inner = if (self.block) |b| b.inner(area) else area;
+                if (!m.isLeftClickInside(inner)) return false;
+                const y = inner.top() + inner.height / 2;
+                if (m.y != y) return false;
 
-    pub fn render(self: *Pagination, ctx: *widget.RenderContext) void {
-        var sub = ctx.getSubScreen();
-
-        switch (self.mode) {
-            .simple => self.renderSimple(&sub),
-            .full => self.renderFull(&sub),
-            .compact => self.renderCompact(&sub),
-        }
-    }
-
-    fn renderSimple(self: *Pagination, sub: anytype) void {
-        var buf: [64]u8 = undefined;
-        const text = std.fmt.bufPrint(&buf, "Page {d} of {d}", .{ self.current_page, self.total_pages }) catch "Page ? of ?";
-
-        sub.setStyle(self.style);
-        sub.moveCursor(0, 0);
-        sub.putString(text);
-
-        // Navigation
-        sub.moveCursor(20, 0);
-        if (self.current_page > 1) {
-            sub.setStyle(self.style.setFg(Color.cyan));
-            sub.putString("◀ Prev");
-        } else {
-            sub.setStyle(self.style.dim());
-            sub.putString("◀ Prev");
-        }
-
-        sub.moveCursor(30, 0);
-        if (self.current_page < self.total_pages) {
-            sub.setStyle(self.style.setFg(Color.cyan));
-            sub.putString("Next ▶");
-        } else {
-            sub.setStyle(self.style.dim());
-            sub.putString("Next ▶");
-        }
-    }
-
-    fn renderFull(self: *Pagination, sub: anytype) void {
-        var x: u16 = 0;
-
-        // Previous button
-        sub.moveCursor(x, 0);
-        if (self.current_page > 1) {
-            sub.setStyle(self.style.setFg(Color.cyan));
-            sub.putString("◀");
-        } else {
-            sub.setStyle(self.style.dim());
-            sub.putString("◀");
-        }
-        x += 2;
-
-        // Page numbers
-        const max_visible: usize = 7;
-        var start_page: usize = 1;
-        var end_page: usize = self.total_pages;
-
-        if (self.total_pages > max_visible) {
-            if (self.current_page <= max_visible / 2) {
-                end_page = max_visible;
-            } else if (self.current_page >= self.total_pages - max_visible / 2) {
-                start_page = self.total_pages - max_visible + 1;
-            } else {
-                start_page = self.current_page - max_visible / 2;
-                end_page = self.current_page + max_visible / 2;
-            }
-        }
-
-        if (start_page > 1) {
-            sub.moveCursor(x, 0);
-            sub.setStyle(self.style.dim());
-            sub.putString("...");
-            x += 4;
-        }
-
-        for (start_page..end_page + 1) |page| {
-            sub.moveCursor(x, 0);
-            if (page == self.current_page) {
-                sub.setStyle(self.style.bold().setFg(Color.yellow));
-            } else {
-                sub.setStyle(self.style.setFg(Color.fromRGB(150, 150, 170)));
-            }
-
-            var buf: [8]u8 = undefined;
-            const page_str = std.fmt.bufPrint(&buf, "{d}", .{page}) catch "?";
-            sub.putString(page_str);
-            x += @intCast(page_str.len + 2);
-        }
-
-        if (end_page < self.total_pages) {
-            sub.moveCursor(x, 0);
-            sub.setStyle(self.style.dim());
-            sub.putString("...");
-            x += 4;
-        }
-
-        // Next button
-        sub.moveCursor(x, 0);
-        if (self.current_page < self.total_pages) {
-            sub.setStyle(self.style.setFg(Color.cyan));
-            sub.putString("▶");
-        } else {
-            sub.setStyle(self.style.dim());
-            sub.putString("▶");
-        }
-    }
-
-    fn renderCompact(self: *Pagination, sub: anytype) void {
-        var buf: [32]u8 = undefined;
-        const text = std.fmt.bufPrint(&buf, "{d}/{d}", .{ self.current_page, self.total_pages }) catch "?/?";
-
-        sub.setStyle(self.style);
-        sub.moveCursor(0, 0);
-        sub.putString(text);
-    }
-
-    pub fn handleEvent(self: *Pagination, event: Event) widget.EventResult {
-        if (event == .key) {
-            switch (event.key.key) {
-                .left => {
-                    if (self.current_page > 1) {
-                        self.current_page -= 1;
-                        if (self.on_change) |cb| cb(self.current_page);
-                        return .needs_redraw;
+                var x = inner.left();
+                const prev_w = text_root.displayWidth(self.prev_label) +| 2;
+                if (m.x >= x and m.x < x +| prev_w) {
+                    if (page.* > 1) {
+                        page.* -= 1;
+                        return true;
                     }
-                },
-                .right => {
-                    if (self.current_page < self.total_pages) {
-                        self.current_page += 1;
-                        if (self.on_change) |cb| cb(self.current_page);
-                        return .needs_redraw;
+                    return false;
+                }
+                x +|= prev_w + 1;
+
+                const win = pageWindow(total, page.*, self.max_visible_pages);
+                var num_buf: [24]u8 = undefined;
+                if (win.start > 1) {
+                    x +|= 2; // "… "
+                }
+                var p = win.start;
+                while (p <= win.end) : (p += 1) {
+                    const txt = std.fmt.bufPrint(&num_buf, " {d} ", .{p}) catch "";
+                    const bw = text_root.displayWidth(txt);
+                    if (m.x >= x and m.x < x +| bw) {
+                        if (page.* != p) {
+                            page.* = p;
+                            return true;
+                        }
+                        return false;
                     }
-                },
-                .home => {
-                    if (self.current_page != 1) {
-                        self.current_page = 1;
-                        if (self.on_change) |cb| cb(self.current_page);
-                        return .needs_redraw;
-                    }
-                },
-                .end => {
-                    if (self.current_page != self.total_pages) {
-                        self.current_page = self.total_pages;
-                        if (self.on_change) |cb| cb(self.current_page);
-                        return .needs_redraw;
-                    }
-                },
-                else => {},
-            }
+                    x +|= bw + 1;
+                }
+                if (win.end < total) {
+                    const sum_s = std.fmt.bufPrint(&num_buf, "… {d} ", .{total}) catch "";
+                    x +|= text_root.displayWidth(sum_s);
+                }
+                const next_w = text_root.displayWidth(self.next_label) +| 2;
+                if (m.x >= x and m.x < x +| next_w and page.* < total) {
+                    page.* += 1;
+                    return true;
+                }
+                return false;
+            },
+            .key => |k| {
+                if (!self.focused or k.kind == .release) return false;
+                switch (k.code) {
+                    .left => {
+                        if (page.* > 1) {
+                            page.* -= 1;
+                            return true;
+                        }
+                        return false;
+                    },
+                    .right => {
+                        if (page.* < total) {
+                            page.* += 1;
+                            return true;
+                        }
+                        return false;
+                    },
+                    .home => {
+                        page.* = 1;
+                        return true;
+                    },
+                    .end => {
+                        page.* = total;
+                        return true;
+                    },
+                    else => return false,
+                }
+            },
+            else => return false,
         }
-        return .ignored;
     }
 
-    pub fn setPage(self: *Pagination, page: usize) void {
-        if (page >= 1 and page <= self.total_pages) {
-            self.current_page = page;
-            if (self.on_change) |cb| cb(self.current_page);
-        }
-    }
+    pub fn renderStateful(self: Pagination, ui: *Ui, area: Rect, page: *usize) !void {
+        const bounds = area.intersection(ui.buffer.area);
+        if (bounds.isEmpty()) return;
 
-    pub fn nextPage(self: *Pagination) bool {
-        if (self.current_page < self.total_pages) {
-            self.current_page += 1;
-            if (self.on_change) |cb| cb(self.current_page);
-            return true;
+        var inner = bounds;
+        if (self.block) |b| {
+            try b.render(ui, bounds);
+            inner = b.inner(bounds);
         }
-        return false;
-    }
+        if (inner.isEmpty()) return;
 
-    pub fn previousPage(self: *Pagination) bool {
-        if (self.current_page > 1) {
-            self.current_page -= 1;
-            if (self.on_change) |cb| cb(self.current_page);
-            return true;
+        const total = @max(@as(usize, 1), self.total_pages);
+        page.* = std.math.clamp(page.*, 1, total);
+
+        const y = inner.top() + inner.height / 2;
+        var x = inner.left();
+        const prev_s = if (page.* <= 1) ui.theme.disabled else ui.theme.button;
+        x = ui.buffer.setStringClipped(x, y, " ", inner.right() -| x, prev_s, inner).x;
+        x = ui.buffer.setStringClipped(x, y, self.prev_label, inner.right() -| x, prev_s, inner).x;
+        x = ui.buffer.setStringClipped(x, y, " ", inner.right() -| x, prev_s, inner).x;
+        x +|= 1;
+
+        const win = pageWindow(total, page.*, self.max_visible_pages);
+        var num_buf: [24]u8 = undefined;
+        if (win.start > 1 and x < inner.right()) {
+            x = ui.buffer.setStringClipped(x, y, "… ", inner.right() -| x, ui.theme.muted, inner).x;
         }
-        return false;
+        var p = win.start;
+        while (p <= win.end and x < inner.right()) : (p += 1) {
+            const txt = std.fmt.bufPrint(&num_buf, " {d} ", .{p}) catch "";
+            const bs = if (p == page.*)
+                (if (self.focused) ui.theme.accent.patch(.{ .reverse = true, .bold = true }) else ui.theme.selection)
+            else
+                ui.theme.text;
+            x = ui.buffer.setStringClipped(x, y, txt, inner.right() -| x, bs, inner).x;
+            x +|= 1;
+        }
+        if (win.end < total and x < inner.right()) {
+            const sum_s = std.fmt.bufPrint(&num_buf, "… {d} ", .{total}) catch "";
+            x = ui.buffer.setStringClipped(x, y, sum_s, inner.right() -| x, ui.theme.muted, inner).x;
+        }
+        if (x < inner.right()) {
+            const next_s = if (page.* >= total) ui.theme.disabled else ui.theme.button;
+            x = ui.buffer.setStringClipped(x, y, " ", inner.right() -| x, next_s, inner).x;
+            x = ui.buffer.setStringClipped(x, y, self.next_label, inner.right() -| x, next_s, inner).x;
+            _ = ui.buffer.setStringClipped(x, y, " ", inner.right() -| x, next_s, inner);
+        }
     }
 };
 
-test "Pagination creation" {
-    const pagination = Pagination.init(10);
-    try std.testing.expectEqual(@as(usize, 1), pagination.current_page);
-    try std.testing.expectEqual(@as(usize, 10), pagination.total_pages);
-}
+test "pagination navigates pages on key, sliding window, and renders buttons" {
+    const alloc = testing.allocator;
+    var buf = try core_root.Buffer.init(alloc, Rect.init(0, 0, 48, 1));
+    defer buf.deinit();
+    var scratch = std.heap.ArenaAllocator.init(alloc);
+    defer scratch.deinit();
+    var cursor: ?core_root.Position = null;
+    const theme = style_root.Theme.dark;
 
-test "Pagination navigation" {
-    var pagination = Pagination.init(5);
+    var ui = Ui.init(&buf, &theme, &scratch, &cursor, buf.area, 4);
+    var page: usize = 9;
+    const pager = Pagination{ .total_pages = 12 };
+    try pager.renderStateful(&ui, buf.area, &page);
+    const snap = try buf.toPlainTextAlloc(alloc);
+    defer alloc.free(snap);
+    try testing.expect(std.mem.indexOf(u8, snap, " 9 ") != null);
+    try testing.expect(std.mem.indexOf(u8, snap, "12") != null);
 
-    try std.testing.expect(pagination.nextPage());
-    try std.testing.expectEqual(@as(usize, 2), pagination.current_page);
-
-    try std.testing.expect(pagination.previousPage());
-    try std.testing.expectEqual(@as(usize, 1), pagination.current_page);
-
-    try std.testing.expect(!pagination.previousPage());
-}
-
-test "Pagination set page" {
-    var pagination = Pagination.init(10);
-    pagination.setPage(5);
-    try std.testing.expectEqual(@as(usize, 5), pagination.current_page);
-
-    pagination.setPage(20);
-    try std.testing.expectEqual(@as(usize, 5), pagination.current_page);
+    try testing.expect(pager.handleEvent(&page, .{ .key = .{ .code = .right } }, buf.area));
+    try testing.expectEqual(@as(usize, 10), page);
 }

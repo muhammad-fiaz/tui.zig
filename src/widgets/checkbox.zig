@@ -1,257 +1,115 @@
-//! Checkbox widget
+//! Interactive `Checkbox` widget supporting boolean and tri-state toggles.
 
 const std = @import("std");
-const widget = @import("widget.zig");
-const layout = @import("../layout/layout.zig");
-const style_mod = @import("../style/style.zig");
-const events = @import("../event/events.zig");
-const input_mod = @import("../event/input.zig");
-const unicode = @import("../unicode/unicode.zig");
+const core_root = @import("../core/root.zig");
+const style_root = @import("../style/root.zig");
+const text_root = @import("../text/root.zig");
+const event_root = @import("../event/root.zig");
+const testing = std.testing;
 
-pub const RenderContext = widget.RenderContext;
-pub const StatefulWidget = widget.StatefulWidget;
-pub const SizeHint = widget.SizeHint;
-pub const EventResult = widget.EventResult;
-pub const Style = style_mod.Style;
-pub const Event = events.Event;
-pub const Rect = layout.Rect;
+pub const Rect = core_root.Rect;
+pub const Ui = core_root.Ui;
+pub const Style = style_root.Style;
+pub const CheckboxSet = style_root.CheckboxSet;
+pub const symbols = style_root.symbols;
+pub const Event = event_root.Event;
 
-/// Checkbox widget
+/// Tri-state checkbox indicator.
+pub const CheckState = enum {
+    unchecked,
+    checked,
+    indeterminate,
+};
+
+/// Single-row toggleable checkbox with label.
 pub const Checkbox = struct {
-    /// Label text
     label: []const u8,
-
-    /// Whether checked
     checked: bool = false,
+    /// Optional explicit tri-state overriding `checked` when non-null.
+    tristate: ?CheckState = null,
+    focused: bool = false,
+    disabled: bool = false,
+    symbols_set: CheckboxSet = symbols.checkbox.unicode,
+    style: ?Style = null,
+    box_style: ?Style = null,
+    focused_style: ?Style = null,
 
-    /// Change callback
-    on_change: ?*const fn (bool) void = null,
-
-    /// Checked symbol
-    checked_symbol: []const u8 = "☑",
-
-    /// Unchecked symbol
-    unchecked_symbol: []const u8 = "☐",
-
-    /// Style
-    style: Style = .{},
-
-    /// Base widget state
-    base: StatefulWidget = .{},
-
-    /// Create a checkbox
-    pub fn init(label: []const u8, on_change: ?*const fn (bool) void) Checkbox {
-        return .{
-            .label = label,
-            .on_change = on_change,
+    /// Handles Space / Enter / left click inside `bounds` and toggles `*checked`.
+    /// Returns `true` when state changed.
+    pub fn handleEvent(checked: *bool, event: Event, bounds: Rect, focused: bool) bool {
+        const triggered = switch (event) {
+            .mouse => |m| m.isLeftClickInside(bounds),
+            .key => |k| focused and k.kind != .release and (k.code == .enter or k.isChar(' ')),
+            else => false,
         };
+        if (triggered) {
+            checked.* = !checked.*;
+            return true;
+        }
+        return false;
     }
 
-    /// Create with initial checked state
-    pub fn initChecked(label: []const u8, checked: bool, on_change: ?*const fn (bool) void) Checkbox {
-        return .{
-            .label = label,
-            .checked = checked,
-            .on_change = on_change,
+    /// Renders checkbox glyph + label into `ui` within `area`.
+    pub fn render(self: Checkbox, ui: *Ui, area: Rect) void {
+        const bounds = area.intersection(ui.buffer.area);
+        if (bounds.isEmpty()) return;
+
+        const state: CheckState = self.tristate orelse if (self.checked) .checked else .unchecked;
+        const indicator = switch (state) {
+            .unchecked => self.symbols_set.unchecked,
+            .checked => self.symbols_set.checked,
+            .indeterminate => self.symbols_set.indeterminate,
         };
-    }
 
-    /// Set checked state
-    pub fn setChecked(self: *Checkbox, checked: bool) void {
-        if (self.checked != checked) {
-            self.checked = checked;
-            self.base.markDirty();
-            if (self.on_change) |callback| {
-                callback(checked);
-            }
-        }
-    }
+        const row_style: Style = if (self.disabled)
+            ui.theme.disabled
+        else if (self.focused)
+            self.focused_style orelse ui.theme.accent.patch(.{ .bold = true })
+        else
+            self.style orelse ui.theme.text;
 
-    /// Toggle checked state
-    pub fn toggle(self: *Checkbox) void {
-        self.setChecked(!self.checked);
-    }
+        const glyph_style: Style = if (self.disabled)
+            ui.theme.disabled
+        else if (self.box_style) |bs|
+            bs
+        else if (state != .unchecked)
+            ui.theme.success.patch(.{ .bold = true })
+        else if (self.focused)
+            ui.theme.accent
+        else
+            ui.theme.muted;
 
-    /// Render the checkbox
-    pub fn render(self: *Checkbox, ctx: *RenderContext) void {
-        var sub = ctx.getSubScreen();
-
-        // Determine style
-        var current_style = self.style;
-        if (self.base.state.focused) {
-            current_style = current_style.bold();
-        }
-        if (self.base.state.disabled) {
-            current_style = ctx.theme.disabled;
-        }
-
-        sub.setStyle(current_style);
-
-        // Draw checkbox
-        sub.moveCursor(0, 0);
-        sub.putString(if (self.checked) self.checked_symbol else self.unchecked_symbol);
-        sub.putString(" ");
-        sub.putString(self.label);
-    }
-
-    /// Handle events
-    pub fn handleEvent(self: *Checkbox, event: Event) EventResult {
-        if (self.base.state.disabled) return .ignored;
-
-        switch (event) {
-            .key => |key_event| {
-                if (key_event.key == .enter or key_event.key == .space) {
-                    self.toggle();
-                    return .consumed;
-                }
-            },
-            .mouse => |mouse_event| {
-                if (mouse_event.kind == .press and mouse_event.button == .left) {
-                    self.toggle();
-                    return .consumed;
-                }
-            },
-            else => {},
-        }
-
-        return .ignored;
-    }
-
-    /// Check if focusable
-    pub fn isFocusable(self: *Checkbox) bool {
-        return !self.base.state.disabled;
-    }
-
-    /// Set focus
-    pub fn setFocus(self: *Checkbox, focused: bool) void {
-        self.base.state.focused = focused;
-        self.base.markDirty();
-    }
-
-    /// Get size hint
-    pub fn sizeHint(self: *Checkbox) SizeHint {
-        const label_width = unicode.stringWidth(self.label);
-        return .{
-            .min_width = @intCast(label_width + 2),
-            .preferred_width = @intCast(label_width + 2),
-            .min_height = 1,
-            .preferred_height = 1,
-        };
-    }
-};
-
-/// Radio button widget
-pub const RadioButton = struct {
-    label: []const u8,
-    selected: bool = false,
-    group: ?*RadioGroup = null,
-    on_select: ?*const fn () void = null,
-    selected_symbol: []const u8 = "●",
-    unselected_symbol: []const u8 = "○",
-    style: Style = .{},
-    base: StatefulWidget = .{},
-
-    pub fn init(label: []const u8) RadioButton {
-        return .{ .label = label };
-    }
-
-    pub fn select(self: *RadioButton) void {
-        if (self.group) |group| {
-            group.select(self);
-        } else {
-            self.selected = true;
-            self.base.markDirty();
-        }
-        if (self.on_select) |callback| {
-            callback();
-        }
-    }
-
-    pub fn render(self: *RadioButton, ctx: *RenderContext) void {
-        var sub = ctx.getSubScreen();
-
-        var current_style = self.style;
-        if (self.base.state.focused) {
-            current_style = current_style.bold();
-        }
-
-        sub.setStyle(current_style);
-        sub.moveCursor(0, 0);
-        sub.putString(if (self.selected) self.selected_symbol else self.unselected_symbol);
-        sub.putString(" ");
-        sub.putString(self.label);
-    }
-
-    pub fn handleEvent(self: *RadioButton, event: Event) EventResult {
-        if (self.base.state.disabled) return .ignored;
-
-        switch (event) {
-            .key => |key_event| {
-                if (key_event.key == .enter or key_event.key == .space) {
-                    self.select();
-                    return .consumed;
-                }
-            },
-            .mouse => |mouse_event| {
-                if (mouse_event.kind == .press and mouse_event.button == .left) {
-                    self.select();
-                    return .consumed;
-                }
-            },
-            else => {},
-        }
-
-        return .ignored;
-    }
-
-    pub fn isFocusable(self: *RadioButton) bool {
-        return !self.base.state.disabled;
-    }
-};
-
-/// Radio button group manager
-pub const RadioGroup = struct {
-    buttons: std.ArrayList(*RadioButton),
-    selected_index: ?usize = null,
-
-    pub fn init(allocator: std.mem.Allocator) RadioGroup {
-        return .{
-            .buttons = std.ArrayList(*RadioButton).init(allocator),
-        };
-    }
-
-    pub fn deinit(self: *RadioGroup) void {
-        self.buttons.deinit();
-    }
-
-    pub fn add(self: *RadioGroup, button: *RadioButton) !void {
-        button.group = self;
-        try self.buttons.append(button);
-    }
-
-    pub fn select(self: *RadioGroup, button: *RadioButton) void {
-        for (self.buttons.items, 0..) |btn, i| {
-            if (btn == button) {
-                btn.selected = true;
-                btn.base.markDirty();
-                self.selected_index = i;
-            } else {
-                btn.selected = false;
-                btn.base.markDirty();
+        const y = bounds.top();
+        var pos = ui.buffer.setStringClipped(bounds.left(), y, indicator, bounds.width, glyph_style, bounds);
+        if (self.label.len > 0 and pos.x < bounds.right()) {
+            pos = ui.buffer.setStringClipped(pos.x, y, " ", 1, row_style, bounds);
+            if (pos.x < bounds.right()) {
+                _ = ui.buffer.setStringClipped(pos.x, y, self.label, bounds.right() - pos.x, row_style, bounds);
             }
         }
     }
 };
 
-test "checkbox creation" {
-    const cb = Checkbox.init("Test", null);
-    try std.testing.expect(!cb.checked);
-}
+test "checkbox renders state glyphs and toggles on click or space" {
+    const alloc = testing.allocator;
+    var buf = try core_root.Buffer.init(alloc, Rect.init(0, 0, 24, 2));
+    defer buf.deinit();
+    var scratch = std.heap.ArenaAllocator.init(alloc);
+    defer scratch.deinit();
+    var cursor: ?core_root.Position = null;
+    const theme = style_root.Theme.dark;
 
-test "checkbox toggle" {
-    var cb = Checkbox.init("Test", null);
-    cb.toggle();
-    try std.testing.expect(cb.checked);
-    cb.toggle();
-    try std.testing.expect(!cb.checked);
+    var ui = Ui.init(&buf, &theme, &scratch, &cursor, buf.area, 4);
+    var checked = false;
+    try ui.renderWidget(Checkbox{ .label = "Enable TLS", .checked = checked, .focused = true }, Rect.init(0, 0, 24, 1));
+
+    const bounds = Rect.init(0, 0, 24, 1);
+    try testing.expect(Checkbox.handleEvent(&checked, .{ .key = .{ .code = .{ .char = ' ' } } }, bounds, true));
+    try testing.expect(checked);
+
+    try ui.renderWidget(Checkbox{ .label = "Enable TLS", .checked = checked }, Rect.init(0, 1, 24, 1));
+    const snap = try buf.toPlainTextAlloc(alloc);
+    defer alloc.free(snap);
+    try testing.expect(std.mem.indexOf(u8, snap, "[ ] Enable TLS") != null);
+    try testing.expect(std.mem.indexOf(u8, snap, "[✓] Enable TLS") != null);
 }

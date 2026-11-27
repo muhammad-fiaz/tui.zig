@@ -1,42 +1,50 @@
-# Zig
-zig-cache/
+# Zig build artifacts & caches
 zig-out/
 .zig-cache/
-
-
-# Build artifacts
+zig-cache/
 *.o
+*.obj
 *.a
+*.lib
 *.so
-*.dll
 *.dylib
+*.dll
 *.exe
 *.pdb
+*.gcno
+*.gcda
+*.gcov
 
-# IDE
-.vscode/
-.idea/
+# Local package / dependency overrides
+zig-pkg/
+
+# VitePress documentation dependencies & outputs
+docs/node_modules/
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+docs/.vitepress/*.timestamp-*
+
+# Environment & secrets
+.env
+.env.*
+
+# Logs & temporary files
+*.log
+*.tmp
+temp/
+tmp/
+
+# OS & editor artifacts
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+Thumbs.db
+desktop.ini
 *.swp
 *.swo
 *~
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Docs
-docs/node_modules/
-docs/.vitepress/cache/
-docs/.vitepress/dist/
-docs/bun.lock
-docs/package-lock.json
-docs/yarn.lock
-
-# Test coverage
-*.profdata
-*.profraw
-
-# Temporary files
-*.tmp
-*.temp
-*.log
+.vscode/
+.idea/
+*.sublime-workspace

@@ -1,92 +1,121 @@
 <div align="center">
-
-
-# TUI.zig
+<img src="docs/public/logo.svg" alt="tui.zig logo" width="400" />
 
 <a href="https://muhammad-fiaz.github.io/tui.zig/"><img src="https://img.shields.io/badge/docs-muhammad--fiaz.github.io-blue" alt="Documentation"></a>
-<a href="https://ziglang.org/"><img src="https://img.shields.io/badge/Zig-0.16.0+-orange.svg?logo=zig" alt="Zig Version"></a>
+<a href="https://ziglang.org/"><img src="https://img.shields.io/badge/Zig-0.17.0%2B-orange.svg?logo=zig" alt="Zig Version"></a>
 <a href="https://github.com/muhammad-fiaz/tui.zig"><img src="https://img.shields.io/github/stars/muhammad-fiaz/tui.zig" alt="GitHub stars"></a>
 <a href="https://github.com/muhammad-fiaz/tui.zig/issues"><img src="https://img.shields.io/github/issues/muhammad-fiaz/tui.zig" alt="GitHub issues"></a>
 <a href="https://github.com/muhammad-fiaz/tui.zig/pulls"><img src="https://img.shields.io/github/issues-pr/muhammad-fiaz/tui.zig" alt="GitHub pull requests"></a>
 <a href="https://github.com/muhammad-fiaz/tui.zig"><img src="https://img.shields.io/github/last-commit/muhammad-fiaz/tui.zig" alt="GitHub last commit"></a>
-<a href="https://github.com/muhammad-fiaz/tui.zig/blob/main/LICENSE"><img src="https://img.shields.io/github/license/muhammad-fiaz/tui.zig" alt="License"></a>
+<a href="https://github.com/muhammad-fiaz/tui.zig"><img src="https://img.shields.io/github/license/muhammad-fiaz/tui.zig" alt="License"></a>
 <a href="https://github.com/muhammad-fiaz/tui.zig/actions/workflows/ci.yml"><img src="https://github.com/muhammad-fiaz/tui.zig/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-<a href="https://github.com/muhammad-fiaz/tui.zig/actions/workflows/deploy-docs.yml"><img src="https://github.com/muhammad-fiaz/tui.zig/actions/workflows/deploy-docs.yml/badge.svg" alt="Docs"></a>
 <img src="https://img.shields.io/badge/platforms-linux%20%7C%20windows%20%7C%20macos-blue" alt="Supported Platforms">
+<a href="https://github.com/muhammad-fiaz/tui.zig/actions/workflows/github-code-scanning/codeql"><img src="https://github.com/muhammad-fiaz/tui.zig/actions/workflows/github-code-scanning/codeql/badge.svg" alt="CodeQL"></a>
 <a href="https://github.com/muhammad-fiaz/tui.zig/releases/latest"><img src="https://img.shields.io/github/v/release/muhammad-fiaz/tui.zig?label=Latest%20Release&style=flat-square" alt="Latest Release"></a>
 <a href="https://pay.muhammadfiaz.com"><img src="https://img.shields.io/badge/Sponsor-pay.muhammadfiaz.com-ff69b4?style=flat&logo=heart" alt="Sponsor"></a>
 <a href="https://github.com/sponsors/muhammad-fiaz"><img src="https://img.shields.io/badge/Sponsor-GitHub-pink?style=social&logo=github" alt="GitHub Sponsors"></a>
-<a href="https://hits.sh/github.com/muhammad-fiaz/tui.zig/"><img src="https://hits.sh/github.com/muhammad-fiaz/tui.zig.svg?label=Visitors&extraCount=0&color=green" alt="Repo Visitors"></a>
+<a href="https://hits.sh/muhammad-fiaz/tui.zig/"><img src="https://hits.sh/muhammad-fiaz/tui.zig.svg?label=Visitors&extraCount=0&color=green" alt="Repo Visitors"></a>
 
-<p><em>A modern, feature-rich Terminal User Interface library for Zig</em></p>
+<p><em>A Fast, Native Terminal User Interface Library for Zig.</em></p>
 
 <b><a href="https://muhammad-fiaz.github.io/tui.zig/">Documentation</a> |
 <a href="https://muhammad-fiaz.github.io/tui.zig/api/">API Reference</a> |
-<a href="https://muhammad-fiaz.github.io/tui.zig/guide/getting-started">Quick Start</a> |
-<a href="https://muhammad-fiaz.github.io/tui.zig/contributing">Contributing</a></b>
+<a href="https://muhammad-fiaz.github.io/tui.zig/guides/getting-started">Quick Start</a> |
+<a href="CONTRIBUTING.md">Contributing</a></b>
 
 </div>
 
+`tui.zig` is a native Terminal User Interface (TUI) framework for Zig **0.17.0+**, built for terminal applications, interactive dashboards, form workflows, system monitors, and terminal graphics without C dependencies.
+
+> [!TIP]
+> If you build with tui.zig, make sure to give it a ⭐ star.
+
 ---
-TUI.zig is a Modern and easy-to-use Terminal User Interface (TUI) library for the Zig programming language. It provides a rich set of features to create modern, responsive, and visually appealing terminal applications with minimal effort.
+
+<details>
+<summary><strong>Table of Contents</strong> (click to expand)</summary>
+
+- [Why Use tui.zig?](#why-use-tuizig)
+- [Prerequisites](#prerequisites)
+- [Supported Platforms](#supported-platforms)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Contributing](#contributing)
+- [License](#license)
+
+</details>
+
+---
+
+## Why Use tui.zig?
+
+**One native Zig library for terminal rendering, layout, input handling, and custom interfaces.**
+
+- **Zero C dependencies on Zig 0.17.0+:** Talks directly to Win32 Console APIs on Windows and native POSIX `termios` / `poll` / `TIOCGWINSZ` / `SIGWINCH` on Linux, macOS, and BSD—supporting both 32-bit and 64-bit targets without linking `ncurses` or `libc`.
+- **Flicker-free double-buffered rendering:** Compares front and back cell grids per frame, writes only modified spans with delta SGR transitions, keeps wide CJK and emoji clusters column-aligned, emits OSC 8 clickable links, and brackets updates with synchronized output (`CSI ? 2026 h/l`).
+- **Explicit allocator ownership, `AppInfo` & live window controls:** Pass your `std.mem.Allocator` once in `tui.init(allocator, .{ .app = .{ .name = "...", .version = "...", .title = "..." } })`, reuse it directly via `app.textInput()`, `app.treeState()`, `app.commandPalette()`, and zero-churn `app.snapshot()`, access metadata inside frames via `ui.app`, update live terminal titles with `app.setTitle(...)`, and guarantee full mode restoration on `defer app.deinit()`.
+- **Constraint and responsive layout engine:** Splits screens cleanly on the stack using `rows`, `cols`, and `splitFixed` with fixed sizes, percentages, ratios, min/max bounds, weighted `.fill`, flex spacing, edge-merged borders, and responsive breakpoint checks (`ui.isCompact`).
+- **OKLCH Color palettes & 17 themes:** Provides 24-bit RGB, HSL, HSV, Hex, CSS named colors, and direct OKLCH colors (`Color.oklch`), official OKLCH Color palettes across 26 families (`slate`, `stone`, `sky`, `lime`, `fuchsia`, `mauve`, `olive`, `mist`, `taupe`, etc.), automatic ANSI-256 and ANSI-16 terminal degradation, JSON theme loading, and 17 built-in presets.
+- **40+ widgets, shell navigation, plots, fonts/i18n & VT view:** Includes `Navbar`, Left (`LTR`) / Right (`RTL`) `Sidebar`, cascading `DropdownMenu`, `StatusBar`, `Block` panels, wrapping paragraphs, Markdown viewer, tables, lists, collapsible trees, tabs, live-validated text inputs, multi-line editors, switches, sliders, accordions, calendars, command palettes, popups, overflow-safe `ToastManager`, `Stepper`, `Pagination`, `LogViewer` (with `EWIDT` target matrix), `DiffViewer`, `TerminalView` (`VtScreen`), `KeyValueList`, gauges, sparklines, bar charts, XY charts (`.area`, `.step`, `.line`, `.scatter`, `.bar`), `PieChart`, `Heatmap`, vector canvases, custom `BitmapFont` & client-owned `Locale`/RTL support, `Tween`/`Spring`/`Transition` motion primitives, `Skeleton` loading shimmers, `tui.fx` buffer effects, and zero-vtable custom stateless/stateful widget dispatch (`ui.renderWidget` and `ui.renderStateful`).
+- **Inline scrollback logs & headless CI testing:** Supports fullscreen alternate screens, fixed sub-rectangles, `.inline_height` viewports that append scrollback history via `insertBefore`, and an in-memory backend for deterministic unit and `--headless` snapshot testing.
 
 > [!NOTE]
-> This project is actively maintained and contributions are welcome. See our [Contributing Guide](https://muhammad-fiaz.github.io/tui.zig/contributing) for details.
+> tui.zig is actively evolving, and APIs may change across releases as widget ergonomics and defaults improve. Review release notes and documentation before upgrading between versions.
+>
+> **Contributions are welcome!** Bug reports, feature suggestions, documentation fixes, and pull requests are appreciated.
+
+---
+
+<details>
+<summary><strong>Similar Zig Projects</strong> (click to expand)</summary>
+
+- For **HTTP client, server, and web applications**, check out [httpx.zig](https://github.com/muhammad-fiaz/httpx.zig).
+- For **environment variables and `.env` parsing**, check out [env.zig](https://github.com/muhammad-fiaz/env.zig).
+- For **ZON file format** support, check out [zon.zig](https://github.com/muhammad-fiaz/zon.zig).
+- For **spinners, loading indicators, and progress bars**, check out [loaders.zig](https://github.com/muhammad-fiaz/loaders.zig).
+- For **Model Context Protocol (MCP)** support, check out [mcp.zig](https://github.com/muhammad-fiaz/mcp.zig).
+- For **API framework** support, check out [api.zig](https://github.com/muhammad-fiaz/api.zig).
+- For **web framework** support, check out [zix](https://github.com/muhammad-fiaz/zix).
+- For **archive handling and compression**, check out [archive.zig](https://github.com/muhammad-fiaz/archive.zig).
+- For **compression file formats**, check out [zigx](https://github.com/muhammad-fiaz/zigx).
+- For **CUDA** support, check out [cuda.zig](https://github.com/muhammad-fiaz/cuda.zig).
+- For **simplified `build.zig` configuration**, check out [buildx.zig](https://github.com/muhammad-fiaz/buildx.zig).
+- For **SQLite with a Zig-native implementation**, check out [sqlite.zig](https://github.com/muhammad-fiaz/sqlite.zig).
+- For **file downloading**, check out [downloader.zig](https://github.com/muhammad-fiaz/downloader.zig).
+- For **update checking and automatic updates**, check out [updater.zig](https://github.com/muhammad-fiaz/updater.zig).
+- For **numerical computing**, check out [num.zig](https://github.com/muhammad-fiaz/num.zig).
+- For **logging**, check out [logly.zig](https://github.com/muhammad-fiaz/logly.zig).
+- For **UUID** support, check out [uuid.zig](https://github.com/muhammad-fiaz/uuid.zig).
+- For **key-value database** support, check out [zkv.zig](https://github.com/muhammad-fiaz/zkv.zig).
+- For **terminal colors and text styling**, check out [hint.zig](https://github.com/muhammad-fiaz/hint.zig).
+- For **Brotli compression**, check out [brotli.zig](https://github.com/muhammad-fiaz/brotli.zig).
+- For **Zstandard (Zstd) compression**, check out [zstd.zig](https://github.com/muhammad-fiaz/zstd.zig).
+- For **Tree-sitter** integration, check out [tree-sitter.zig](https://github.com/muhammad-fiaz/tree-sitter.zig).
+- For **regular expressions**, check out [regex.zig](https://github.com/muhammad-fiaz/regex.zig).
+
+</details>
 
 ---
 
 <details>
 <summary><strong>Features</strong> (click to expand)</summary>
 
-| Feature | Description | Documentation |
-|---------|-------------|---------------|
-| **True Color (24-bit RGB)** | Full spectrum color support for modern terminals. | https://muhammad-fiaz.github.io/tui.zig/guide/styling |
-| **256 Color Palette** | Fallback color support for older terminals. | https://muhammad-fiaz.github.io/tui.zig/guide/styling |
-| **16 ANSI Colors** | Universal compatibility with basic terminal colors. | https://muhammad-fiaz.github.io/tui.zig/guide/styling |
-| **Double Buffering** | Flicker-free rendering by buffering entire screen. | https://muhammad-fiaz.github.io/tui.zig/api/renderer |
-| **Diff-Based Updates** | Only redraw changed cells for optimal performance. | https://muhammad-fiaz.github.io/tui.zig/api/renderer |
-| **Unicode Support** | Full grapheme cluster handling for international text. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets |
-| **Wide Character Support** | CJK and emoji rendering with proper width calculation. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets |
-| **Keyboard Events** | Full key detection with modifiers (Ctrl, Alt, Shift). | https://muhammad-fiaz.github.io/tui.zig/guide/events |
-| **Mouse Support** | Click, drag, scroll, and hover event handling. | https://muhammad-fiaz.github.io/tui.zig/guide/events |
-| **Bracketed Paste** | Safe paste mode to distinguish typed vs pasted input. | https://muhammad-fiaz.github.io/tui.zig/guide/events |
-| **Focus Events** | Window focus detection for responsive applications. | https://muhammad-fiaz.github.io/tui.zig/guide/events |
-| **Raw Mode** | Direct terminal control for real-time input. | https://muhammad-fiaz.github.io/tui.zig/api/terminal |
-| **Text Widget** | Styled text with alignment and wrapping. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#text |
-| **Button Widget** | Clickable buttons with hover states and callbacks. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#button |
-| **Input Field** | Single-line text input with cursor navigation. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#input-field |
-| **Text Area** | Multi-line text editing with scrolling. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#text-area |
-| **Checkbox** | Toggle checkboxes with state management. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#checkbox |
-| **Radio Button** | Single selection groups for mutually exclusive options. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#radio-button |
-| **Progress Bar** | Visual progress indicators with customizable styles. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#progress-bar |
-| **Spinner** | Animated loading indicators with multiple presets. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#spinner |
-| **List View** | Scrollable item lists with selection support. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#list-view |
-| **Table** | Data tables with columns, rows, and sorting. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#table |
-| **Tabs** | Tabbed navigation for organizing content. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#tabs |
-| **Modal** | Dialog overlays for focused interactions. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#modal |
-| **Scroll View** | Scrollable containers for overflow content. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#scroll-view |
-| **Split View** | Resizable panes for multi-panel layouts. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#split-view |
-| **Badge** | Status indicators with variants and sizes. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#badge |
-| **Card** | Container widgets with titles and content. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#card |
-| **Tooltip** | Contextual information on hover. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#tooltip |
-| **Accordion** | Collapsible content sections. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#accordion |
-| **Breadcrumb** | Navigation path indicators. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#breadcrumb |
-| **Sidebar** | Navigation sidebars with items. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#sidebar |
-| **Status Bar** | Application status displays. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#status-bar |
-| **Toast** | Notification messages with auto-dismiss. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#toast |
-| **Skeleton** | Loading placeholders with animations. | https://muhammad-fiaz.github.io/tui.zig/guide/widgets#skeleton |
-| **Rich Text Styling** | Bold, italic, underline, strikethrough formatting. | https://muhammad-fiaz.github.io/tui.zig/guide/styling |
-| **Built-in Themes** | Default, Dark, Light, Nord, Dracula, Gruvbox themes. | https://muhammad-fiaz.github.io/tui.zig/guide/styling#themes |
-| **Custom Themes** | Create your own color schemes with theme builder. | https://muhammad-fiaz.github.io/tui.zig/guide/styling#custom-themes |
-| **Border Styles** | Single, double, rounded, thick, ASCII border styles. | https://muhammad-fiaz.github.io/tui.zig/guide/styling#borders |
-| **Flex Layout** | Flexible row/column layouts with constraints. | https://muhammad-fiaz.github.io/tui.zig/guide/layout |
-| **Box Model** | Padding, margin, and border support. | https://muhammad-fiaz.github.io/tui.zig/guide/layout#box-model |
-| **Constraints** | Min/max sizing for responsive layouts. | https://muhammad-fiaz.github.io/tui.zig/guide/layout#constraints |
-| **Alignment** | Start, center, end, stretch alignment options. | https://muhammad-fiaz.github.io/tui.zig/guide/layout#alignment |
-| **Easing Functions** | Linear, ease-in, ease-out, bounce, elastic curves. | https://muhammad-fiaz.github.io/tui.zig/guide/animation |
-| **Tween Animations** | Smooth value interpolation for transitions. | https://muhammad-fiaz.github.io/tui.zig/guide/animation#tween |
-| **Timer System** | Scheduled callbacks for timed operations. | https://muhammad-fiaz.github.io/tui.zig/guide/animation#timers |
-| **FPS Counter** | Performance monitoring for optimization. | https://muhammad-fiaz.github.io/tui.zig/api/renderer#fps |
+| Feature | Description |
+|---|---|
+| **Backends & Lifecycle** | Cross-platform `WindowsBackend` (Win32 Console API + `ReadConsoleInputW` + UTF-8 CP 65001 + ConPTY pipe fallback), `PosixBackend` (`termios`, `TIOCGWINSZ`, `SIGWINCH`, `poll`), `AnsiBackend`, and `MemoryBackend`; automatic terminal restoration via `defer app.deinit()`. |
+| **Viewports & Inline Logs** | Fullscreen alternate screen, fixed sub-rectangle viewports, and `.inline_height` layouts supporting dynamic `setViewportHeight` and scrollback `insertBefore` output. |
+| **Rendering & Cell Grid** | Double-buffered 32-byte inline UTF-8 `Cell` storage, wide-character leader protection, `BufferDiff` run coalescing, synchronized updates (`CSI ? 2026 h/l`), and OSC 8 hyperlinks. |
+| **Layout Engine** | Zero-allocation `rows`, `cols`, and `splitFixed` constraint solver supporting `length`, `percentage`, `ratio`, `min`, `max`, `fill`, `Flex` alignment, overlap border merging, and `ui.isCompact` breakpoints. |
+| **OKLCH Color & Themes** | 24-bit RGB/HSL/HSV/Hex, CSS colors, direct `Color.oklch`, all 26 OKLCH Color families (`c50`..`c950`), perceptual ANSI-256/16 degradation, curly/dotted underlines, 17 theme presets, and JSON themes (`parseThemeJson`). |
+| **Unicode, Fonts & i18n** | Grapheme cluster width measurement, multi-script CJK/Arabic/Indic/Cyrillic/emoji column alignment, word/character wrapping (`WrapIterator`), RTL visual ordering (`visualOrderInto`), `Locale` translations & decimals, client `BitmapFont` glyphs (`BitmapGlyph`, `FontRenderMode`), `symbols.icons` presets, multi-span `Line`/`Text`, and `Masked` helpers. |
+| **Event & Input Parser** | Normalized `KeyEvent` (press/repeat/release, Ctrl/Alt/Shift/Super modifiers, Kitty CSI-u, legacy VT/SS3), `MouseEvent` (SGR/X10/Win32 clicks, drag, scroll wheel), focus tracking, resize, and bracketed paste. |
+| **Containers & Chrome** | `Block` (16 border sets, edge collapsing, shadows, multi-title support), `Clear`, `Fill`, `Divider`, `Header`, `Navbar` (LTR/RTL), `Sidebar` (Left/Right & RTL/LTR), `StatusBar`, `MenuBar`, `ContextMenu`, `Breadcrumbs`, `SplitPane`, `ScrollView`, `Accordion`, `Stepper`, `Pagination`, `KeyValueList`. |
+| **Forms & Validation** | `TextInput` (UTF-8, click/drag selection, masking, hardware cursor tracking, schema rules), `TextArea` (multi-line selection, tab expansion, read-only, gutter & scroll), `Button`, `Checkbox` (tri-state), `RadioGroup` (vertical & wrapped horizontal), `Select` / `Dropdown`, `Switch`, `Slider`, `FocusGroup`. |
+| **Collections & Navigation** | `Paragraph`, `List` (multi-line items, auto-scroll), `Table` (sticky header/footer, constraint columns, striping, cell highlights), `Tabs`, `Tree` (path-hashed `TreeState`), `Scrollbar`, `Calendar` (localized month/weekday labels, event highlights), `LogViewer`, `DiffViewer`. |
+| **Telemetry & Plots** | `Gauge` (1/8th Unicode blocks), `LineGauge`, `ProgressBar` (determinate & indeterminate), `Spinner`, `Sparkline`, `BarChart`, multi-series XY `Chart` (`.scatter`, `.line`, `.area`, `.step`, `.bar`), `PieChart` (`.solid`, `.segmented`, `.hud`, `.rose`), `Heatmap`, `Canvas` (`Braille`, `Quadrant`, `HalfBlock`, `Dot`, `Painter`), and `TerminalView` (`VtScreen`). |
+| **Overlays & Productivity** | `Popup` (backdrop dim & centering), `ConfirmDialog`, overflow-safe `Toast` & `ToastManager` stacked banners, `Tooltip`, `CommandPalette` (live filter + shortcuts + mouse), `BigText` banners, and `Markdown` viewer. |
+| **Animations & Visual Effects** | Zero-allocation `Tween`, `Easing`, `Spring` physics, `Transition`, `Skeleton` loading shimmers, `tui.fx` buffer effects (`fade`, `dimBackdrop`, `dissolve`, `sweepWipe`, `shimmer`, `pulseHighlight`), and monotonic `.tick` timing for both `App.run()` and custom client event loops. |
+| **Custom Client UIs** | Compile-time `ui.renderWidget` and `ui.renderStateful` dispatch targeting `*tui.Ui` or `*tui.Buffer` directly with zero heap vtables. |
 
 </details>
 
@@ -99,66 +128,130 @@ TUI.zig is a Modern and easy-to-use Terminal User Interface (TUI) library for th
 
 ## Prerequisites
 
-Before using `TUI.zig`, ensure you have the following:
-
 | Requirement | Version | Notes |
-|-------------|---------|-------|
-| **Zig** | 0.16.0+ | Download from [ziglang.org](https://ziglang.org/download/) |
-| **Operating System** | Windows 10+, Linux, macOS | Cross-platform terminal support |
+|---|---|---|
+| **Zig** | **0.17.0+** (minimum) | Download from [ziglang.org](https://ziglang.org/download/) |
+| **Operating System** | Windows, Linux, macOS, BSD | 32-bit and 64-bit targets without external C libraries |
+
+> [!IMPORTANT]
+> **Zig 0.17.0+ is required.** This library targets Zig **0.17.0+** and tracks its `std.Io`, `std.process`, and standard library interfaces directly.
 
 ---
 
 ## Supported Platforms
 
-`TUI.zig` is validated on these architectures:
-
-| Platform | x86_64 (64-bit) | aarch64 (ARM64) | x86 (32-bit) |
-|----------|-----------------|-----------------|--------------|
+| Platform | x86_64 (64-bit) | aarch64 (ARM64) | 32-bit (`x86` / `arm` / `thumb` / `riscv32`) |
+|---|---|---|---|
 | **Linux** | Yes | Yes | Yes |
-| **Windows** | Yes | Yes | Yes |
+| **Windows** | Yes | Yes | Yes (`x86-windows`) |
 | **macOS** | Yes | Yes (Apple Silicon) | No |
+
+32-bit macOS (`x86-macos`) is not supported because Zig's standard library does not implement that target. Use `x86_64-macos` or `aarch64-macos`. Freestanding targets also compile cleanly when driven by custom byte/memory streams.
 
 ### Cross-Compilation
 
-Zig makes cross-compilation easy. Build for any target from any host:
-
 ```bash
-# Build for Linux ARM64 from Windows
-zig build -Dtarget=aarch64-linux
+# Build for Linux x86_64 from Windows/macOS
+zig build -Dtarget=x86_64-linux-gnu
 
-# Build for Windows from Linux  
-zig build -Dtarget=x86_64-windows
+# Build for 32-bit Linux / ARM / RISC-V
+zig build -Dtarget=x86-linux-musl
+zig build -Dtarget=arm-linux-musleabihf
+zig build -Dtarget=riscv32-linux-musl
 
-# Build for macOS Apple Silicon from Linux
+# Build for macOS Apple Silicon
 zig build -Dtarget=aarch64-macos
 
-# Build for 32-bit Windows
+# Build for Windows (64-bit / 32-bit / ARM64)
+zig build -Dtarget=x86_64-windows
 zig build -Dtarget=x86-windows
+zig build -Dtarget=aarch64-windows
 ```
 
 </details>
 
 ---
 
-## Quick Start
+## Installation
 
-### Installation
+Choose either pinned stable release tarballs for reproducible builds or track the `main` branch directly.
 
-#### Stable Release (Recommended)
+### Method 1: Stable Version Pinning (Recommended)
 
-```bash
-zig fetch --save "https://github.com/muhammad-fiaz/tui.zig/archive/refs/tags/0.0.2.tar.gz"
-```
-
-#### Development (Latest)
-
-Install the latest development version from the main branch:
+**Latest Release (`v0.1.0`)**
 
 ```bash
-zig fetch --save git+https://github.com/muhammad-fiaz/tui.zig.git
+zig fetch --save https://github.com/muhammad-fiaz/tui.zig/archive/refs/tags/0.1.0.tar.gz
 ```
 
-Then add to your `build.zig`:
+### Method 2: Main Branch / Development Install
+
+Install directly from the latest `main` branch commit:
+
+```bash
+zig fetch --save git+https://github.com/muhammad-fiaz/tui.zig.git#main
+```
+
+> [!NOTE]
+> **tui.zig** requires Zig **0.17.0+**.
+>
+> To generate API HTML docs locally from any checkout, run `zig build docs` to output into `zig-out/docs/`.
+
+---
+
+<details>
+<summary><strong>Method 3: Manual `build.zig.zon` Configuration</strong> (click to expand)</summary>
+
+Pin a stable release tarball OR track `main` explicitly in `build.zig.zon`:
+
+```zig
+// Option A: Stable release version pinning (v0.1.0)
+.dependencies = .{
+    .tui = .{
+        .url = "https://github.com/muhammad-fiaz/tui.zig/archive/refs/tags/0.1.0.tar.gz",
+        .hash = "...", // Run `zig fetch --save <url>` to populate hash
+    },
+},
+
+// Option B: Direct main branch tracking
+.dependencies = .{
+    .tui = .{
+        .url = "git+https://github.com/muhammad-fiaz/tui.zig.git#main",
+        .hash = "...", // Run `zig fetch --save git+https://github.com/muhammad-fiaz/tui.zig.git#main`
+    },
+},
+```
+
+</details>
+
+---
+
+<details>
+<summary><strong>Method 4: Local Source Checkout</strong> (click to expand)</summary>
+
+```bash
+git clone https://github.com/muhammad-fiaz/tui.zig.git
+cd tui.zig
+zig build
+zig build test
+zig build run-all-examples
+```
+
+To depend on a local checkout from another project:
+
+```zig
+.dependencies = .{
+    .tui = .{
+        .path = "../tui.zig",
+    },
+},
+```
+
+</details>
+
+---
+
+### Wire into `build.zig`
 
 ```zig
 const tui_dep = b.dependency("tui", .{
@@ -168,162 +261,94 @@ const tui_dep = b.dependency("tui", .{
 exe.root_module.addImport("tui", tui_dep.module("tui"));
 ```
 
-### Hello World
+---
+
+## Quick Start
+
+A complete interactive terminal app with header, bordered card, animated spinner, progress gauge, and status bar:
 
 ```zig
 const std = @import("std");
 const tui = @import("tui");
 
-pub fn main() !void {
-    // Create application
-    var app = try tui.App.init(.{});
-    defer app.deinit();
+const State = struct {
+    ticks: u64 = 0,
+    ratio: f64 = 0.65,
+};
 
-    // Create a simple widget
-    var hello = HelloWidget{};
-    try app.setRoot(&hello);
-
-    // Run the event loop
-    try app.run();
+fn onEvent(state: *State, event: tui.Event, app: *tui.App) !bool {
+    switch (event) {
+        .key => |k| if (k.isChar('q') or event.isEscape() or event.isCtrlC()) {
+            app.quit();
+            return false;
+        },
+        .tick => state.ticks +%= 1,
+        else => {},
+    }
+    return true;
 }
 
-const HelloWidget = struct {
-    pub fn render(self: *HelloWidget, ctx: *tui.RenderContext) void {
-        _ = self;
-        var screen = ctx.getSubScreen();
+fn render(state: *State, ui: *tui.Ui) !void {
+    ui.fillThemeSurface();
+    const layout = ui.rows(3, .{ .{ .length = 1 }, .{ .fill = 1 }, .{ .length = 1 } }, .{});
 
-        // Center the message
-        const msg = "Hello, TUI.zig!";
-        const x = (screen.width -| 18) / 2;
-        const y = screen.height / 2;
+    var hdr = layout[0];
+    hdr.header(.{ .title = "tui.zig", .subtitle = "Quick Start", .right = "v" ++ tui.version }, hdr.area);
 
-        screen.setStyle(tui.Style.default
-            .setFg(tui.Color.rgb(100, 200, 255))
-            .bold());
-        screen.moveCursor(x, y);
-        screen.putString(msg);
-    }
-
-    pub fn handleEvent(self: *HelloWidget, event: tui.Event) tui.EventResult {
-        _ = self;
-        if (event == .key) {
-            if (event.key.modifiers.ctrl and event.key.key == .char) {
-                if (event.key.key.char == 'c') {
-                    return .quit;
-                }
-            }
+    var center = layout[1].margin(tui.Margin.symmetric(4, 2));
+    try center.panel(.{
+        .title = "Welcome",
+        .focused = true,
+        .padding = tui.Padding.uniform(1),
+    }, center.area, state, struct {
+        fn draw(st: *State, p: *tui.Ui) !void {
+            try p.paragraph(.{
+                .raw = "Native Zig 0.17.0+ terminal rendering with double buffering and explicit allocators.",
+                .wrap = .word,
+            }, null);
+            p.space(1);
+            try p.gauge(.{ .ratio = st.ratio, .label = "Build 65%" }, null);
+            p.space(1);
+            p.spinner(.{ .tick = st.ticks, .label = "Event loop running" }, null);
         }
-        return .ignored;
-    }
-};
-```
+    }.draw);
 
-### Interactive Counter
+    var ft = layout[2];
+    ft.statusBar(.{
+        .left = &.{.{ .text = "READY", .badge = true }},
+        .right = &.{.{ .text = "q / Esc Quit" }},
+    }, ft.area);
+}
 
-```zig
-const std = @import("std");
-const tui = @import("tui");
-
-const Counter = struct {
-    count: i32 = 0,
-
-    pub fn render(self: *Counter, ctx: *tui.RenderContext) void {
-        var screen = ctx.getSubScreen();
-        screen.clear();
-
-        // Display count
-        var buf: [32]u8 = undefined;
-        const text = std.fmt.bufPrint(&buf, "Count: {d}", .{self.count}) catch "?";
-
-        screen.setStyle(tui.Style.default.setFg(tui.Color.cyan).bold());
-        screen.moveCursor(2, 2);
-        screen.putString(text);
-
-        // Instructions
-        screen.setStyle(tui.Style.default.dim());
-        screen.moveCursor(2, 4);
-        screen.putString("Up/Down to change, Ctrl+C to quit");
-    }
-    pub fn handleEvent(self: *Counter, event: tui.Event) tui.EventResult {
-        switch (event) {
-            .key => |k| switch (k.key) {
-                .up => { self.count += 1; return .needs_redraw; },
-                .down => { self.count -= 1; return .needs_redraw; },
-                else => {},
-            },
-            else => {},
-        }
-        return .ignored;
-    }
-};
-
-pub fn main() !void {
-    var app = try tui.App.init(.{});
+pub fn main(init: std.process.Init) !void {
+    var app = try tui.init(init.gpa, .{
+        .io = init.io,
+        .settings = .{ .title = "tui.zig Quick Start" },
+    });
     defer app.deinit();
 
-    var counter = Counter{};
-    try app.setRoot(&counter);
-    try app.run();
+    var state = State{};
+    try app.enter();
+    try app.run(&state, .{ .onEvent = onEvent, .render = render });
 }
 ```
 
-
----
-
-## Testing
-
-```bash
-# Run all tests
-zig build test
-
-# Run with verbose output
-zig build test -- --verbose
-```
-
----
-
-## Documentation
-
-Full documentation is available at [muhammad-fiaz.github.io/tui.zig](https://muhammad-fiaz.github.io/tui.zig/)
-
-- **[Getting Started](https://muhammad-fiaz.github.io/tui.zig/guide/getting-started)** - Installation and first app
-- **[Widgets](https://muhammad-fiaz.github.io/tui.zig/guide/widgets)** - Built-in widget reference
-- **[Styling](https://muhammad-fiaz.github.io/tui.zig/guide/styling)** - Colors, themes, and styling
-- **[Layout](https://muhammad-fiaz.github.io/tui.zig/guide/layout)** - Layout system guide
-- **[Events](https://muhammad-fiaz.github.io/tui.zig/guide/events)** - Event handling
-- **[API Reference](https://muhammad-fiaz.github.io/tui.zig/api/)** - Complete API docs
+Browse all 39 interactive examples under `examples/`—including `zig build run-app-shell`, `zig build run-media-viewer`, `zig build run-custom-fonts-i18n`, `zig build run-animations-effects`, `zig build run-custom-loop`, `zig build run-custom-ui`, `zig build run-custom-widget`, `zig build run-custom-stateful-widget`, and `zig build run-dashboard`.
 
 ---
 
 ## Contributing
 
-Contributions are welcome! Please see our [Contributing Guide](https://muhammad-fiaz.github.io/tui.zig/contributing) for details.
+Contributions are welcome! Please:
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Add tests and `--headless` example assertions for new functionality
+4. Ensure all checks pass: `zig build test`, `zig build run-all-examples`, and `zig build docs`
+5. Submit a pull request (see [CONTRIBUTING.md](CONTRIBUTING.md))
 
 ---
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## Support
-
-If you find TUI.zig useful, consider:
-
-- Starring the repository
-- Reporting bugs or suggesting features
-- Improving documentation
-- [Sponsoring development](https://pay.muhammadfiaz.com)
-
----
-
-<div align="center">
-<p>Made with care by <a href="https://github.com/muhammad-fiaz">Muhammad Fiaz</a></p>
-</div>
+MIT License — see [LICENSE](LICENSE) for details. Copyright (c) 2026 Muhammad Fiaz.
