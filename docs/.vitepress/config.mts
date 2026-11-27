@@ -24,13 +24,18 @@ const websiteJsonLd = JSON.stringify({
     name: 'Muhammad Fiaz',
     url: 'https://github.com/muhammad-fiaz'
   },
+  publisher: {
+    '@type': 'Person',
+    name: 'Muhammad Fiaz',
+    url: 'https://github.com/muhammad-fiaz'
+  },
   description:
     'Native Zig 0.17.0+ terminal user interface library with double-buffered diff rendering, constraint layouts, OKLCH Color palettes, Unicode support, and 30+ reusable widgets.'
 })
 
 export default defineConfig({
   title: 'tui.zig',
-  titleTemplate: ':title — tui.zig',
+  titleTemplate: ':title | TUI.zig',
   description:
     'Native Zig 0.17.0+ terminal user interface library with explicit memory management, cross-platform backends, layout engine, OKLCH Color palettes, and custom widget support.',
   base: '/tui.zig/',
@@ -57,7 +62,9 @@ export default defineConfig({
 
   head: [
     ['meta', { name: 'theme-color', content: '#f7a41d' }],
+    ['meta', { name: 'robots', content: 'index, follow' }],
     ['meta', { name: 'author', content: 'Muhammad Fiaz' }],
+    ['meta', { name: 'publisher', content: 'Muhammad Fiaz' }],
     ['meta', { name: 'google-adsense-account', content: ADSENSE_CLIENT_ID }],
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/tui.zig/favicon.svg' }],
     ['meta', { property: 'og:type', content: 'website' }],
@@ -125,9 +132,9 @@ export default defineConfig({
       ['link', { rel: 'canonical', href: canonical }],
       ['meta', { name: 'keywords', content: pageKeywords }],
       ['meta', { property: 'og:url', content: canonical }],
-      ['meta', { property: 'og:title', content: `${pageTitle} — tui.zig` }],
+      ['meta', { property: 'og:title', content: `${pageTitle} | TUI.zig` }],
       ['meta', { property: 'og:description', content: pageDesc }],
-      ['meta', { name: 'twitter:title', content: `${pageTitle} — tui.zig` }],
+      ['meta', { name: 'twitter:title', content: `${pageTitle} | TUI.zig` }],
       ['meta', { name: 'twitter:description', content: pageDesc }],
       ['script', { type: 'application/ld+json' }, breadcrumbJsonLd]
     ]
