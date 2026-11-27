@@ -40,7 +40,7 @@ export default defineConfig({
     'Native Zig 0.17.0+ terminal user interface library with explicit memory management, cross-platform backends, layout engine, OKLCH Color palettes, and custom widget support.',
   base: '/tui.zig/',
   lang: 'en-US',
-  cleanUrls: true,
+  cleanUrls: false,
   lastUpdated: true,
 
   sitemap: {
