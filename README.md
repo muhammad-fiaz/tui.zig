@@ -337,8 +337,6 @@ pub fn main(init: std.process.Init) !void {
 }
 ```
 
-Browse all 39 interactive examples under `examples/`—including `zig build run-app-shell`, `zig build run-media-viewer`, `zig build run-custom-fonts-i18n`, `zig build run-animations-effects`, `zig build run-custom-loop`, `zig build run-custom-ui`, `zig build run-custom-widget`, `zig build run-custom-stateful-widget`, and `zig build run-dashboard`.
-
 ---
 
 ## Contributing
