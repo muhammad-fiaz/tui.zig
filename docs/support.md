@@ -8,6 +8,6 @@ keywords: tui.zig support, sponsor, github sponsors, zig open source donation
 
 If **tui.zig** helps you build fast, reliable command-line software in Zig, consider supporting ongoing development, documentation, and multi-platform maintenance:
 
-- [GitHub Sponsors — @muhammad-fiaz](https://github.com/sponsors/muhammad-fiaz)
-- [Direct Donation — pay.muhammadfiaz.com](https://pay.muhammadfiaz.com)
+- [GitHub Sponsors: @muhammad-fiaz](https://github.com/sponsors/muhammad-fiaz)
+- [Direct Donation: pay.muhammadfiaz.com](https://pay.muhammadfiaz.com)
 - [Star or Contribute on GitHub](https://github.com/muhammad-fiaz/tui.zig)

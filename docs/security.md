@@ -17,7 +17,7 @@ Versions below `0.1.0` are **not supported** and are deprecated. Please upgrade 
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in **tui.zig**—such as escape-sequence injection hazards, buffer bounds bugs, raw-mode restoration issues, or VT parser memory errors—please **do not** disclose it in a public GitHub issue before coordinated review.
+If you discover a security vulnerability in **tui.zig**, such as escape-sequence injection hazards, buffer bounds bugs, raw-mode restoration issues, or VT parser memory errors, please **do not** disclose it in a public GitHub issue before coordinated review.
 
 Report privately via GitHub Security Advisories:
 

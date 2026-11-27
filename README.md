@@ -52,7 +52,7 @@
 
 **A zero-dependency native Zig library for terminal rendering, layout, input handling, and custom interfaces.**
 
-- **Zero C dependencies on Zig 0.17.0+:** Communicates directly with Win32 Console APIs on Windows and native POSIX interfaces (`termios`, `poll`, `TIOCGWINSZ`, `SIGWINCH`) on Linux, macOS, and BSD—supporting both 32-bit and 64-bit targets without linking `ncurses` or `libc`.
+- **Zero C dependencies on Zig 0.17.0+:** Communicates directly with Win32 Console APIs on Windows and native POSIX interfaces (`termios`, `poll`, `TIOCGWINSZ`, `SIGWINCH`) on Linux, macOS, and BSD, supporting both 32-bit and 64-bit targets without linking `ncurses` or `libc`.
 - **Flicker-free double-buffered rendering:** Diffs front and back cell grids each frame, emits only changed spans with minimal SGR transitions, preserves column alignment for wide CJK and emoji clusters, supports OSC 8 clickable links, and brackets updates with synchronized output (`CSI ? 2026 h/l`).
 - **Explicit allocator ownership, `AppInfo` & live window controls:** Pass a `std.mem.Allocator` once to `tui.init(allocator, .{ .app = .{ .name = "...", .version = "...", .title = "..." } })`, reuse it across `app.textInput()`, `app.treeState()`, `app.commandPalette()`, and zero-churn `app.snapshot()`, access metadata inside frames via `ui.app`, update terminal titles dynamically with `app.setTitle(...)`, and guarantee clean terminal restoration via `defer app.deinit()`.
 - **Constraint-based & responsive layout engine:** Partitions viewports on the stack using `rows`, `cols`, and `splitFixed` with fixed sizes, percentages, ratios, min/max bounds, weighted `.fill`, flex spacing, edge-merged borders, and responsive breakpoint helpers (`ui.isCompact`).
@@ -353,4 +353,4 @@ Contributions are welcome! Please:
 
 ## License
 
-MIT License — see [LICENSE](LICENSE) for details. Copyright (c) 2026 Muhammad Fiaz.
+MIT License: see [LICENSE](LICENSE) for details. Copyright (c) 2026 Muhammad Fiaz.

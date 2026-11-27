@@ -6,7 +6,7 @@ keywords: tui.zig themes, OKLCH Color colors, oklch terminal colors, truecolor z
 
 # Styles, Colors & Themes
 
-**tui.zig** pairs full 24-bit color precision—including native OKLCH support and official **OKLCH Color** palettes—with automatic perceptual downgrade on ANSI-256, ANSI-16, and monochrome terminals.
+**tui.zig** pairs full 24-bit color precision, including native OKLCH support and official **OKLCH Color** palettes, with automatic perceptual downgrade on ANSI-256, ANSI-16, and monochrome terminals.
 
 ## Creating Colors
 

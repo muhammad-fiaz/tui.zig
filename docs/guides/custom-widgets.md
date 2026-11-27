@@ -6,7 +6,7 @@ keywords: custom widgets zig, tui custom component, renderStateful, renderWidget
 
 # Custom Widgets & Client UI Architecture
 
-**tui.zig** dispatches custom widgets completely at compile time via `ui.renderWidget` and `ui.renderStateful`—requiring zero heap allocations, trait boxing, or dynamic vtables. Any Zig struct exposing `render` or `renderStateful` composes seamlessly with built-in containers, constraints, themes, and diffing.
+**tui.zig** dispatches custom widgets completely at compile time via `ui.renderWidget` and `ui.renderStateful`, requiring zero heap allocations, trait boxing, or dynamic vtables. Any Zig struct exposing `render` or `renderStateful` composes seamlessly with built-in containers, constraints, themes, and diffing.
 
 Run all custom UI & widget examples interactively:
 

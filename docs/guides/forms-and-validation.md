@@ -43,9 +43,9 @@ try ui.textInput(.{
 
 ## Presets & Masking
 
-- `tui.TextInput.search("Search files...")` — adds a `🔍 ` prefix
-- `tui.TextInput.command("Run command...")` — adds a `> ` prompt prefix
-- `tui.TextInput.secret("API Token")` — masks UTF-8 graphemes with `"•"` while keeping raw input bytes in `TextInputState`
+- `tui.TextInput.search("Search files...")`: adds a `🔍 ` prefix
+- `tui.TextInput.command("Run command...")`: adds a `> ` prompt prefix
+- `tui.TextInput.secret("API Token")`: masks UTF-8 graphemes with `"•"` while keeping raw input bytes in `TextInputState`
 
 ## Built-in Validation Combinators
 

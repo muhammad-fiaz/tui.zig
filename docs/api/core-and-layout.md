@@ -12,9 +12,9 @@ Passed to draw callbacks and custom widgets. Provides zero-allocation splitting,
 
 ### Region & Layout Methods
 
-- `scratchAllocator(self: *Ui) std.mem.Allocator` — per-frame reset arena allocator
-- `available(self: *const Ui) Rect` — remaining vertical flow area
-- `size(self: *const Ui) Size` / `isCompact(self: *const Ui, threshold: u16) bool` — current dimensions and responsive width breakpoint check
+- `scratchAllocator(self: *Ui) std.mem.Allocator`: per-frame reset arena allocator
+- `available(self: *const Ui) Rect`: remaining vertical flow area
+- `size(self: *const Ui) Size` / `isCompact(self: *const Ui, threshold: u16) bool`: current dimensions and responsive width breakpoint check
 - `allocateRows(self: *Ui, height: u16) Rect` / `space(self: *Ui, rows_count: u16) void`
 - `resolveArea(self: *Ui, explicit: ?Rect, default_height: ?u16) Rect`
 - `region(self: *const Ui, sub_area: Rect) Ui` / `inset(self: *const Ui, pad: Padding) Ui` / `margin(self: *const Ui, m: Margin) Ui`

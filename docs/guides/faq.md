@@ -44,7 +44,7 @@ Implement either method on any Zig struct:
 - **Stateless widget**: `pub fn render(self: MyWidget, ui: *tui.Ui, area: tui.Rect) !void` (or targeting `*tui.Buffer`)
 - **Stateful widget**: `pub fn renderStateful(self: MyWidget, ui: *tui.Ui, area: tui.Rect, state: *MyState) !void`
 
-Render them with `try ui.renderWidget(my_widget, area)` or `try ui.renderStateful(my_widget, &my_state, area)`—resolved completely at compile time. Run `zig build run-custom-ui`, `zig build run-custom-widget`, and `zig build run-custom-stateful-widget` to see full patterns.
+Render them with `try ui.renderWidget(my_widget, area)` or `try ui.renderStateful(my_widget, &my_state, area)`, resolved completely at compile time. Run `zig build run-custom-ui`, `zig build run-custom-widget`, and `zig build run-custom-stateful-widget` to see full patterns.
 
 ## How do I make layouts responsive when the terminal resizes?
 
@@ -72,4 +72,4 @@ Pass `.backend = .{ .memory = .{ .width = 80, .height = 24 } }` in `tui.init`, i
 
 ## What versions are supported for security updates?
 
-Version `0.1.x` (`0.1.0+`) is actively supported. Versions below `0.1.0` are unsupported and deprecated—see the [Security Policy](/security).
+Version `0.1.x` (`0.1.0+`) is actively supported. Versions below `0.1.0` are unsupported and deprecated, see the [Security Policy](/security).

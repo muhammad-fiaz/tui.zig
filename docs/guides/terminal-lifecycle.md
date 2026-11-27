@@ -12,11 +12,11 @@ Improperly restored raw terminals leave user shells broken after exits or errors
 
 Pass configuration via anonymous struct defaults in `tui.init(allocator, .{ ... })`:
 
-- `app`: `AppInfo` (`.name`, `.version`, `.description`, `.author`, `.title`) — accessible anywhere inside frames via `ui.app` and updatable live with `try app.setTitle(...)` / `try app.setInfo(...)`
+- `app`: `AppInfo` (`.name`, `.version`, `.description`, `.author`, `.title`): accessible anywhere inside frames via `ui.app` and updatable live with `try app.setTitle(...)` / `try app.setInfo(...)`
 - `backend`: `.auto` (default), `.posix`, `.windows`, `.ansi`, or `.{ .memory = .{ .width = 80, .height = 24 } }`
 - `viewport`: `.fullscreen` (default), `.{ .inline_height = 8 }`, or `.{ .fixed = rect }`
 - `theme`: `Theme` (defaults to `Theme.dark`)
-- `cursor_shape`: `?CursorShape` (`null`, `.blinking_bar`, `.steady_bar`, `.blinking_block`, `.steady_block`, `.blinking_underline`, `.steady_underline` — automatically restored on exit)
+- `cursor_shape`: `?CursorShape` (`null`, `.blinking_bar`, `.steady_bar`, `.blinking_block`, `.steady_block`, `.blinking_underline`, `.steady_underline`: automatically restored on exit)
 - `capability`: `?Capability` override (`null` enables environment detection)
 - `settings`: `AppSettings` with validated defaults:
   - `alternate_screen`: `true`

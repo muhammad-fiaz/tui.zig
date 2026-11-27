@@ -6,7 +6,7 @@ keywords: tui.zig custom font, BitmapFont, FontRenderMode, zig i18n, RTL termina
 
 # Custom Fonts, Symbols & Internationalization
 
-**tui.zig** gives client applications full ownership of custom bitmap fonts, symbol sets, right-to-left (`RTL`) script reordering, localization catalogs (`Locale` — a pure client-owned struct with zero built-in language presets), and localized calendar labels.
+**tui.zig** gives client applications full ownership of custom bitmap fonts, symbol sets, right-to-left (`RTL`) script reordering, localization catalogs (`Locale`: a pure client-owned struct with zero built-in language presets), and localized calendar labels.
 
 ## Custom Client Fonts (`BitmapFont`, `BitmapGlyph`, `BigText`)
 
@@ -45,7 +45,7 @@ try ui.bigText(.{
 
 Switch cleanly between Unicode, ASCII-only, and Nerd Font glyphs using `tui.symbols.IconSet`:
 
-- `tui.symbols.icons.unicode` (`✓`, `✗`, `★`, `▶`, `▾`, `⚠`, `ℹ`, etc.)
+- `tui.symbols.icons.unicode` (`✓`, `�, `, `★`, `▶`, `▾`, `⚠`, `ℹ`, etc.)
 - `tui.symbols.icons.ascii` (`[+]`, `[x]`, `*`, `>`, `v`, `!`, `i`, etc.)
 - `tui.symbols.icons.nerd` (Nerd Font PUA codepoints for file/branch/terminal badges)
 

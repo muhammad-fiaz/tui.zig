@@ -80,4 +80,4 @@ Reuse the `Allocator` bound in `tui.init(allocator, ...)` without repeating `all
 - `pushTestEvent(self: *App, ev: Event) !void`
 - `resizeTest(self: *App, size: Size) !void`
 - `scrollback(self: *const App) []const u8` (recorded `insertBefore` lines on `.memory` backend)
-- `snapshot(self: *App) ![]const u8` — renders the current screen into a capacity-retaining buffer owned by `App` (`deinit()` frees it automatically; slice remains valid until the next `snapshot()` call or `deinit()`)
+- `snapshot(self: *App) ![]const u8`: renders the current screen into a capacity-retaining buffer owned by `App` (`deinit()` frees it automatically; slice remains valid until the next `snapshot()` call or `deinit()`)

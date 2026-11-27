@@ -26,4 +26,4 @@ Static HTML documentation from Zig doc comments can also be generated locally vi
 | `tui.widgets.*`, `tui.Sidebar`, `tui.Navbar`, `tui.DropdownMenu`, `tui.TerminalView`, `tui.Table`, `tui.Chart`, ... | Catalog of 40+ built-in widgets & states | [All Widgets & State Types](/api/widgets) |
 | `tui.schema` | Built-in schema validation combinators for settings and inputs | [Forms & Validation](/guides/forms-and-validation) |
 | `tui.hasArg` | Cross-platform CLI argument helper (`init.minimal.args`) | [Headless Testing](/guides/testing-and-headless) |
-| `tui.version`, `tui.minimum_zig_version` | `"0.1.0"`, `"0.17.0"` | — |
+| `tui.version`, `tui.minimum_zig_version` | `"0.1.0"`, `"0.17.0"` |: |

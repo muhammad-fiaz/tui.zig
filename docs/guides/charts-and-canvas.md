@@ -40,10 +40,10 @@ try ui.chart(.{
 
 | Marker | Sub-Cell Resolution | Best For |
 |---|---|---|
-| `.braille` | 2Ã—4 dots per cell | Smooth plots, waveforms, vector shapes |
-| `.half_block` | 1Ã—2 dual-color pixels | Density maps, two-tone bars |
-| `.quadrant` | 2Ã—2 blocks | Sharp geometric fills |
-| `.dot` / `.block` | 1Ã—1 | Bold low-res plots or ASCII compatibility |
+| `.braille` | 2Ã, 4 dots per cell | Smooth plots, waveforms, vector shapes |
+| `.half_block` | 1Ã, 2 dual-color pixels | Density maps, two-tone bars |
+| `.quadrant` | 2Ã, 2 blocks | Sharp geometric fills |
+| `.dot` / `.block` | 1Ã, 1 | Bold low-res plots or ASCII compatibility |
 
 ## `PieChart` & `Heatmap`
 

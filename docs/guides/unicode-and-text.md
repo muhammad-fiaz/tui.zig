@@ -10,10 +10,10 @@ Terminal cells do not map 1:1 with UTF-8 bytes or Unicode codepoints. Combining 
 
 ## Measuring & Truncating Text Safely
 
-- `tui.text.displayWidth(slice)` — computes exact terminal column width across grapheme clusters.
-- `tui.text.GraphemeIterator` — walks cluster-by-cluster yielding `(slice, width)`.
-- `tui.text.truncateInto(slice, max_width, mode, out_buf)` — truncates cleanly to `.end` (`"text…"`), `.start` (`"…text"`), `.middle` (`"te…xt"`), or `.clip` with zero heap allocations.
-- `tui.Masked.init(secret)` — renders masked secret previews (`••••`) without allocating raw copies.
+- `tui.text.displayWidth(slice)`: computes exact terminal column width across grapheme clusters.
+- `tui.text.GraphemeIterator`: walks cluster-by-cluster yielding `(slice, width)`.
+- `tui.text.truncateInto(slice, max_width, mode, out_buf)`: truncates cleanly to `.end` (`"text…"`), `.start` (`"…text"`), `.middle` (`"te…xt"`), or `.clip` with zero heap allocations.
+- `tui.Masked.init(secret)`: renders masked secret previews (`••••`) without allocating raw copies.
 
 ## Rich Styled Lines (`Span`, `Line`, `Text`)
 
@@ -40,4 +40,4 @@ try ui.paragraph(.{
 ## Multi-Script, RTL Ordering & Custom Fonts
 
 - Combining marks across Arabic, Devanagari, Thai, Latin, and emoji clusters measure 0 columns cleanly.
-- Use `tui.text.TextDirection`, `tui.text.detectDirection`, and `tui.text.visualOrderInto` alongside `tui.Locale` and client `tui.BitmapFont` banners—see [Custom Fonts, Symbols & Internationalization](/guides/fonts-and-i18n).
+- Use `tui.text.TextDirection`, `tui.text.detectDirection`, and `tui.text.visualOrderInto` alongside `tui.Locale` and client `tui.BitmapFont` banners, see [Custom Fonts, Symbols & Internationalization](/guides/fonts-and-i18n).
