@@ -10,7 +10,7 @@ Build full workstation layouts cleanly using built-in chrome primitives:
 
 - **`Header` & `StatusBar`**: Top application banners and bottom multi-segment bars supporting left/right alignment and inverted badges (`.badge = true`).
 - **`MenuBar`, `DropdownMenu` & `ContextMenu`**: Horizontal top menu bars, cascading nested submenus (`MenuState`, `MenuGroup`, `MenuItem` with `children` and `checked` toggles), and `(x, y)` anchored floating shortcut menus with horizontal dividers.
-- **`Pagination`**: Sliding-window page bar (`�, � Prev  … 4 [5] 6 … 12 Next ▶`) supporting mouse clicks and `Left`/`Right`/`Home`/`End`.
+- **`Pagination`**: Sliding-window page bar (`�, � Prev  … 4 [5] 6 … 12 Next ▶`) supporting mouse clicks and `Left`/`Right`/`Home`/`End`.
 - **`LogViewer` & `DiffViewer`**: Structured log inspector with per-source `EWIDT` target filtering (`h` key), substring match highlighting, and follow-tail scrolling, paired with unified `DiffViewer` old/new line numbers.
 - **`TerminalView` (`VtScreen`)**: Pure-Zig ANSI/VT100 screen buffer widget supporting SGR 16/256/RGB colors, cursor tracking, and erase sequences.
 - **`Breadcrumbs` & `Tabs`**: Path indicators (`Home › Docs › Core`) and mouse/keyboard-switchable tab strips (`Tabs.handleEvent`).

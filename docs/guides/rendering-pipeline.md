@@ -23,6 +23,11 @@ Key attributes stored per cell:
 
 Always write through `buffer.setStringClipped(...)` (used by all built-in widgets):
 
+```zig
+const label = "Status: 漢字 🚀";
+_ = ui.buffer.setStringClipped(area.left(), area.top(), label, area.width, ui.theme.accent, area);
+```
+
 - Clips cleanly against arbitrary sub-rectangles (`Rect.intersection`)
 - Computes grapheme widths via `GraphemeIterator`
 - Clears damaged leader cells if you overwrite the second column of a pre-existing wide glyph
@@ -31,3 +36,10 @@ Always write through `buffer.setStringClipped(...)` (used by all built-in widget
 ## Incremental `BufferDiff`
 
 During `endFrame()`, `BufferDiff.init(prev, next)` skips unchanged positions, coalesces contiguous modified horizontal spans into minimal cursor moves, and emits delta SGR and OSC 8 transitions via `ansi.writeDiff`. Synchronized Update markers (`CSI ? 2026 h` / `l`) wrap each flush on compatible terminals to prevent screen tearing.
+
+```zig
+// Manual transaction pattern when driving frames outside app.run():
+var ui = try app.beginFrame();
+try render(&state, &ui);
+try app.endFrame(&ui);
+```

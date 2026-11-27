@@ -6,7 +6,7 @@ keywords: tui memory management, explicit allocator zig, arena retain capacity, 
 
 # Memory Management & Zero-Churn Design
 
-Terminal UI loops often run 30–120 times per second. **tui.zig** avoids allocator pressure across redraws by keeping persistent buffers bounded and resetting only O(1) arena pointers between frames.
+Terminal UI loops often run 30 to 120 times per second. **tui.zig** avoids allocator pressure across redraws by keeping persistent buffers bounded and resetting only O(1) arena pointers between frames.
 
 ## Allocation Lifecycle
 
@@ -16,3 +16,25 @@ Terminal UI loops often run 30–120 times per second. **tui.zig** avoids alloca
 4. **Inline 32-Byte Cell Storage**: `Cell` avoids heap indirection for ASCII, box-drawing, Braille, and typical multi-byte emoji clusters.
 5. **Owned Widget States & `App` Factories**: `app.textInput()`, `app.textArea()`, `app.treeState()`, and `app.commandPalette()` reuse `app.allocator` cleanly and release via explicit `.deinit()`.
 6. **Diff-Minimized ANSI Output**: Only modified cells emit escapes, skipping redundant CSI cursor moves across contiguous runs and redundant SGR attributes across identical styles.
+
+## Per-Frame Scratch & State Ownership Pattern
+
+```zig
+const State = struct {
+    tree: tui.TreeState,
+    input: tui.TextInputState,
+    screen: tui.VtScreen,
+
+    fn deinit(self: *State) void {
+        self.tree.deinit();
+        self.input.deinit();
+        self.screen.deinit();
+    }
+};
+
+fn render(state: *State, ui: *tui.Ui) !void {
+    // Transient string is valid for this frame and freed on next beginFrame() without heap churn.
+    const badge = try std.fmt.allocPrint(ui.scratchAllocator(), "Nodes: {d}", .{state.tree.visibleCount(&roots)});
+    try ui.text(badge, .{}, null);
+}
+```

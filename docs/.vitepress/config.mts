@@ -200,6 +200,7 @@ export default defineConfig({
             { text: 'Charts, Sparklines & Canvas', link: '/guides/charts-and-canvas' },
             { text: 'Popups, Modals & Toasts', link: '/guides/popups-and-dialogs' },
             { text: 'Scrolling & Navigation Chrome', link: '/guides/scrolling-and-navigation' },
+            { text: 'Terminal, Logs & Diff Viewers', link: '/guides/terminal-view' },
             { text: 'Animations, Effects & Custom Loops', link: '/guides/animations-and-effects' },
             { text: 'Fonts, Symbols & i18n', link: '/guides/fonts-and-i18n' }
           ]
